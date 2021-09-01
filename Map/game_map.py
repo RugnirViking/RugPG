@@ -65,7 +65,7 @@ class GameMap:
 
         """ Lighting baking """
         tcod.path.dijkstra2d(dist, cost, 2, diagonal=3)
-        max_dist = 10000
+        max_dist = 8
         lum = 0.5
         for j in range(tilestorender.shape[1]):
             for i in range(tilestorender.shape[0]):
@@ -80,9 +80,6 @@ class GameMap:
                     # tile[0]=num+48
                     if distn > max_dist:
                         distn = max_dist
-                    ##bg_t[0] = max(min(tile[2][0] / 255 - 1 * lum + (distn / -max_dist) * lum), 0) * 255
-                    #bg_t[1] = min(255,bg_t[1]*((distn / -32.0) * 0.2)*255.0)/4+bg_t[0]*3/4
-                    print((distn / -max_dist) * lum)
                     h, l, s = colorsys.rgb_to_hls(fg_t[0] / 255, fg_t[1] / 255, fg_t[2] / 255)
                     random.seed(i + j)
                     r, g, b = colorsys.hls_to_rgb(h, max(min(1, l - 1 * lum + (distn / -max_dist) * lum), 0), s)
@@ -92,6 +89,8 @@ class GameMap:
                     h2, l2, s2 = colorsys.rgb_to_hls(bg_t[0] / 255, bg_t[1] / 255, bg_t[2] / 255)
                     r2, g2, b2 = colorsys.hls_to_rgb(h2, max(min(1, l2 - 1 * lum + (distn / -max_dist) * lum), 0), s2)
                     tile[2] = [r2 * 255, g2 * 255, b2 * 255]
+
+                    # Colored lighting - red then half green for a nice orange hue
                     tile[2][0] = min(255,tile[2][0]*((distn / -16.0) * 0.4)*255.0)/8+tile[2][0]*7/8
                     tile[2][1] = min(255,tile[2][1]*((distn / -16.0) * 0.4)*255.0)/16+tile[2][1]*15/16
 
