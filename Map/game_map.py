@@ -48,6 +48,10 @@ class GameMap:
                 If a tile is in the "visible" array, then draw it with the "light" colors.
                 If it isn't, but it's in the "explored" array, then draw it with the "dark" colors.
                 Otherwise, the default is "SHROUD".
+
+                Worth remembering that this is called any time anything updates including mouse movement.
+                However the seed for lighting flicker only gets reset when the bottom-right most visible
+                tile's location changes (i.e the player moves)
                 """
         tilestorender = np.select(
             condlist=[self.visible, self.explored],
@@ -65,6 +69,7 @@ class GameMap:
 
         """ Lighting baking """
         tcod.path.dijkstra2d(dist, cost, 2, diagonal=3)
+        ## max_dist is like the intensity of the flame held by the character. Lower is brighter
         max_dist = 8
         lum = 0.5
         for j in range(tilestorender.shape[1]):
