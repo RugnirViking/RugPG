@@ -1,13 +1,22 @@
+
+from __future__ import annotations
 import numpy
+
 import numpy as np  # type: ignore
 import tcod
-from tcod import console
 from tcod.console import Console
 
-from Map import tile_types
 import colorsys
 import random
 
+from typing import Iterable, Iterator, Optional, TYPE_CHECKING
+
+from Map import tile_types
+from Entities.entity import Actor
+
+if TYPE_CHECKING:
+    from engine import Engine
+    from Entities.entity import Entity
 
 def scale_lightness(rgb, scale_l):
     # convert rgb to hls
@@ -31,11 +40,42 @@ def scale_lightness_saturation(rgb, scale_l, scale_s):
 
 
 class GameMap:
-    def __init__(self, width: int, height: int):
+    def __init__(
+        self, engine: Engine, width: int, height: int, entities: Iterable[Entity] = ()
+    ):
+        self.engine = engine
         self.width, self.height = width, height
+        self.entities = set(entities)
         self.tiles = np.full((width, height), fill_value=tile_types.wall, order="F")
-        self.visible = np.full((width, height), fill_value=False, order="F")  # Tiles the player can currently see
-        self.explored = np.full((width, height), fill_value=False, order="F")  # Tiles the player has seen before
+        self.visible = np.full(
+            (width, height), fill_value=False, order="F"
+        )  # Tiles the player can currently see
+        self.explored = np.full(
+            (width, height), fill_value=False, order="F"
+        )  # Tiles the player has seen before
+
+    @property
+    def actors(self) -> Iterator[Actor]:
+        """Iterate over this maps living actors."""
+        yield from (
+            entity
+            for entity in self.entities
+            if isinstance(entity, Actor) and entity.is_alive
+        )
+
+    def get_blocking_entity_at_location(self, location_x: int, location_y: int) -> Optional[Entity]:
+        for entity in self.entities:
+            if entity.blocks_movement and entity.x == location_x and entity.y == location_y:
+                return entity
+
+        return None
+
+    def get_actor_at_location(self, x: int, y: int) -> Optional[Actor]:
+        for actor in self.actors:
+            if actor.x == x and actor.y == y:
+                return actor
+
+        return None
 
     def in_bounds(self, x: int, y: int) -> bool:
         """Return True if x and y are inside of the bounds of this map."""
@@ -62,7 +102,7 @@ class GameMap:
         dist = numpy.zeros((self.width, self.height), dtype=numpy.int8)
         """To add more light sources we can add more of the below line. For now its just the player. 
             We add a random offset to simulate flickering light"""
-        dist[playerx, playery] = -16 + random.uniform(-1.5, 1.5)
+        dist[playerx, playery] = -14 + random.uniform(-1.5, 1.5)
         for x in range(self.width):
             for y in range(self.height):
                 cost[x, y] = 1 if self.tiles["transparent"][x][y] else 2
@@ -100,6 +140,9 @@ class GameMap:
                     tile[2][1] = min(255,tile[2][1]*((distn / -16.0) * 0.4)*255.0)/16+tile[2][1]*15/16
 
         console.tiles_rgb[0:self.width, 0:self.height] = tilestorender
-        """
-                we want to make things look spooky
-                """
+
+
+        for entity in self.entities:
+            # Only print entities that are in the FOV
+            if self.visible[entity.x, entity.y]:
+                console.print(x=entity.x, y=entity.y, string=entity.char, fg=entity.color)
