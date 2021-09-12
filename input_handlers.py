@@ -38,10 +38,10 @@ MOVE_KEYS = {
     tcod.event.K_KP_8: (0, -1),
     tcod.event.K_KP_9: (1, -1),
     # Vi keys.
-    tcod.event.K_h: (-1, 0),
-    tcod.event.K_j: (0, 1),
-    tcod.event.K_k: (0, -1),
-    tcod.event.K_l: (1, 0),
+    tcod.event.K_a: (-1, 0),
+    tcod.event.K_s: (0, 1),
+    tcod.event.K_w: (0, -1),
+    tcod.event.K_d: (1, 0),
     tcod.event.K_y: (-1, -1),
     tcod.event.K_u: (1, -1),
     tcod.event.K_b: (-1, 1),
@@ -52,6 +52,7 @@ WAIT_KEYS = {
     tcod.event.K_PERIOD,
     tcod.event.K_KP_5,
     tcod.event.K_CLEAR,
+    tcod.event.K_SPACE,
 }
 CONFIRM_KEYS = {
     tcod.event.K_RETURN,
@@ -183,9 +184,8 @@ class MainGameEventHandler(EventHandler):
         modifier = event.mod
 
         player = self.engine.player
-
         if key == tcod.event.K_PERIOD and modifier & (tcod.event.KMOD_LSHIFT | tcod.event.KMOD_RSHIFT) or \
-                (key == tcod.event.K_BACKSLASH and modifier & (tcod.event.KMOD_LSHIFT | tcod.event.KMOD_RSHIFT)):
+                (key == tcod.event.K_LESS and modifier & (tcod.event.KMOD_LSHIFT | tcod.event.KMOD_RSHIFT)):
             return actions.TakeStairsAction(player)
 
         if key in MOVE_KEYS:

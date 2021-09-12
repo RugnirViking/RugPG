@@ -36,7 +36,7 @@ def new_game() -> Engine:
     max_rooms = 30
 
     surfacefile = "startmap.csv"
-    starter_message = f"Hello and welcome, adventurer, to RugPG V{majorversion}.{minorversion}.{buildversion}."
+    starter_message = f"Hello and welcome, adventurer, to Winterfjell Deeps: RugPG V{majorversion}.{minorversion}.{buildversion}."
 
     story_message = f"Long have you lived in the shadow of the mountain named Winterfjell.\n\nAs a child, " \
                     f"you had always heard stories whispered of the horrors that\n\nbefell those who delved " \
