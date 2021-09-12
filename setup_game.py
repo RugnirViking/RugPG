@@ -19,7 +19,7 @@ from Map.procgen_dungeon import generate_dungeon
 
 
 # Load the background image and remove the alpha channel.
-background_image = tcod.image.load("menu_background3.png")[:, :, :3]
+background_image = tcod.image.load("menu_background.png")[:, :, :3]
 
 
 majorversion = 0
