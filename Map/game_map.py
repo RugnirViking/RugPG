@@ -5,12 +5,13 @@ import numpy
 import numpy as np  # type: ignore
 import tcod
 from tcod.console import Console
-
+import csv
 import colorsys
 import random
 
 from typing import Iterable, Iterator, Optional, TYPE_CHECKING
 
+from Entities import entity_factories
 from Map import tile_types
 from Entities.entity import Actor, Item
 from Map.procgen_dungeon import generate_dungeon
@@ -205,3 +206,48 @@ class GameWorld:
             map_height=self.map_height,
             engine=self.engine,
         )
+
+    def load_surface(self,filename:str) -> None:
+        player = self.engine.player
+        dungeon = GameMap(self.engine, self.map_width, self.map_height, entities=[player])
+
+        with open(filename, newline='') as csvfile:
+            spamreader = csv.reader(csvfile, delimiter=',', quotechar='|')
+            y=0
+            x=0
+            for row in spamreader:
+                for tile in row:
+                    if tile==".":
+                        num=random.randrange(0,3)
+                        if num==0:
+                            dungeon.tiles[x, y] = tile_types.snow
+                        elif num==1:
+                            dungeon.tiles[x, y] = tile_types.snow2
+                        else:
+                            dungeon.tiles[x, y] = tile_types.snow3
+                    if tile=="+":
+                        dungeon.tiles[x, y] = tile_types.floor
+                    if tile=="s":
+                        dungeon.tiles[x, y] = tile_types.floor#spawn statue
+                        entity_factories.statue.spawn(dungeon, x, y)
+                    if tile=="c":
+                        dungeon.tiles[x, y] = tile_types.snow#spawn snowdrift
+                        entity_factories.snowdrift.spawn(dungeon, x, y)
+                    if tile=="t":
+                        dungeon.tiles[x, y] = tile_types.snow#spawn tree
+                        entity_factories.tree.spawn(dungeon, x, y)
+                    elif tile=="#":
+                        dungeon.tiles[x, y] = tile_types.wall
+                    elif tile=="0":
+                        dungeon.tiles[x, y] = tile_types.pillar
+                    elif tile==">":
+                        dungeon.tiles[x, y] = tile_types.down_stairs
+                        dungeon.downstairs_location = (x,y)
+                    elif tile=="p":
+                        dungeon.tiles[x, y] = tile_types.snow
+                        player.place(*(x,y), dungeon)
+                    x=x+1
+                x=0
+                y=y+1
+
+        self.engine.game_map = dungeon

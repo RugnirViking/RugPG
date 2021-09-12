@@ -131,8 +131,50 @@ class EventHandler(BaseEventHandler):
     def on_render(self, console: tcod.Console) -> None:
         self.engine.render(console)
 
+class GameStartHandler(EventHandler):
+
+    def __init__(self, engine: Engine):
+        super().__init__(engine)
+
+    def on_render(self, console: tcod.Console) -> None:
+        console.tiles_rgb["fg"] //= 8
+        console.tiles_rgb["bg"] //= 8
+        # Draw a frame with a custom banner title.
+        console.draw_frame(3, 3, console.width-6, console.height-6,fg=color.white)
+        console.print_box(
+            3, 3, console.width-6, 1, f"┤{self.engine.popuptitle}├", alignment=tcod.CENTER
+        )
+        console.print(
+            console.width // 2,
+            console.height // 8,
+            self.engine.popuptext,
+            fg=self.engine.popup_textcolor,
+            bg=color.black,
+            alignment=tcod.CENTER,
+        )
+
+        console.print(
+            console.width // 2,
+            console.height * 2 // 8,
+            self.engine.story_message,
+            fg=color.white,
+            bg=color.black,
+            alignment=tcod.CENTER,
+        )
+
+    def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[ActionOrHandler]:
+        action: Optional[Action] = None
+
+        key = event.sym
+        modifier = event.mod
+
+        # No valid key was pressed
+        return MainGameEventHandler(self.engine)
 
 class MainGameEventHandler(EventHandler):
+
+    def __init__(self, engine: Engine):
+        super().__init__(engine)
 
     def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[ActionOrHandler]:
         action: Optional[Action] = None

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import threading
 from typing import TYPE_CHECKING
 import traceback
 
@@ -18,7 +19,14 @@ def save_game(handler: input_handlers.BaseEventHandler, filename: str) -> None:
     """If the current event handler has an active Engine then save it."""
     if isinstance(handler, input_handlers.EventHandler):
         handler.engine.save_as(filename)
+        handler.engine.save_log("log.txt")
         print("Game saved. Rest easy.")
+
+def save_only_log(handler: input_handlers.BaseEventHandler) -> None:
+    """If the current event handler has an active Engine then save it."""
+    if isinstance(handler, input_handlers.EventHandler):
+        handler.engine.save_log("log.txt")
+        print("Rest in violence.")
 
 def main() -> None:
     screen_width = 80
@@ -27,8 +35,9 @@ def main() -> None:
 
 
     tileset = tcod.tileset.load_tilesheet(
-        "dejavu10x10_gs_tc.png", 32, 8, tcod.tileset.CHARMAP_TCOD
+        "drake_10x10_2.png", 16, 16, tcod.tileset.CHARMAP_CP437
     )
+
 
     handler: input_handlers.BaseEventHandler = setup_game.MainMenu()
 
@@ -58,6 +67,7 @@ def main() -> None:
                             traceback.format_exc(), color.error
                         )
         except exceptions.QuitWithoutSaving:
+            save_only_log(handler)
             raise
         except SystemExit:  # Save and quit.
             save_game(handler, "savegame.sav")

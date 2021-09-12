@@ -41,15 +41,39 @@ floor = new_tile(
     dark=(ord("+"), (50, 35, 75), (0, 0, 0)),
     light=(ord("+"), (150, 150, 150), (0, 0, 0)),
 )
+snow = new_tile(
+    walkable=True,
+    transparent=True,
+    dark=(ord("."), (50, 35, 75), (0, 0, 0)),
+    light=(ord("."), (255, 255, 255), (140, 140, 150)),
+)
+snow2 = new_tile(
+    walkable=True,
+    transparent=True,
+    dark=(ord(","), (50, 35, 75), (0, 0, 0)),
+    light=(ord(","), (255, 255, 255), (150, 150, 160)),
+)
+snow3 = new_tile(
+    walkable=True,
+    transparent=True,
+    dark=(ord("`"), (50, 35, 75), (0, 0, 0)),
+    light=(ord("`"), (255, 255, 255), (160, 160, 170)),
+)
 wall = new_tile(
     walkable=False,
     transparent=False,
     dark=(ord("="), (75, 0, 150), (37, 0, 75)),
-    light=(ord("="), (255, 255, 255), (150, 150, 150)),
+    light=(ord("="), (255, 255, 255), (180, 180, 180)),
+)
+pillar = new_tile(
+    walkable=False,
+    transparent=False,
+    dark=(ord("0"), (75, 0, 150), (37, 0, 75)),
+    light=(ord("0"), (255, 255, 255), (150, 150, 150)),
 )
 down_stairs = new_tile(
     walkable=True,
     transparent=True,
-    dark=(ord(">"), (0, 0, 100), (50, 50, 150)),
-    light=(ord(">"), (255, 255, 255), (200, 180, 50)),
+    dark=(ord(">"), (0, 0, 100), (50, 50, 120)),
+    light=(ord(">"), (255, 255, 255), (55, 50, 45)),
 )

@@ -5,6 +5,7 @@ import copy
 import lzma
 import pickle
 import traceback
+import random
 from typing import Optional
 
 import tcod
@@ -18,8 +19,12 @@ from Map.procgen_dungeon import generate_dungeon
 
 
 # Load the background image and remove the alpha channel.
-background_image = tcod.image.load("menu_background.png")[:, :, :3]
+background_image = tcod.image.load("menu_background3.png")[:, :, :3]
 
+
+majorversion = 0
+minorversion = 1
+buildversion = 5
 
 def new_game() -> Engine:
     """Return a brand new game session as an Engine instance."""
@@ -30,11 +35,17 @@ def new_game() -> Engine:
     room_min_size = 6
     max_rooms = 30
 
-    majorversion=0
-    minorversion=1
-    buildversion=5
+    surfacefile = "startmap.csv"
+    starter_message = f"Hello and welcome, adventurer, to RugPG V{majorversion}.{minorversion}.{buildversion}."
 
-    starter_message = f"Hello and welcome, adventurer, to RugPG V{majorversion}.{minorversion}.{buildversion}"
+    story_message = f"Long have you lived in the shadow of the mountain named Winterfjell.\n\nAs a child, " \
+                    f"you had always heard stories whispered of the horrors that\n\nbefell those who delved " \
+                    f"under the dread mountain. That all changed when\n\nyour village began suffering kidnappings" \
+                    f" and thefts - the icy darkness\n\nin the mountain is hungering for more. You know that if it " \
+                    f"isn't\n\nstopped soon your loved ones will be taken too." \
+                    f"\n\n\n\nThe frost is growing, and your only chance to stop it lies deep\n\nunder this icy " \
+                    f"place. You grab your dagger and approach\n\nthe entrance to Winterfjell under cover of night\n\n\n\n" \
+                    f"Warm winds at your back. Good luck."
 
     player = copy.deepcopy(entity_factories.player)
 
@@ -49,7 +60,7 @@ def new_game() -> Engine:
         map_height=map_height,
     )
 
-    engine.game_world.generate_floor()
+    engine.game_world.load_surface(surfacefile)
     engine.update_fov()
 
     engine.message_log.add_message(
@@ -68,8 +79,8 @@ def new_game() -> Engine:
     player.inventory.items.append(leather_armor)
     player.equipment.toggle_equip(leather_armor, add_message=False)
 
-    engine.popup_message("Welcome",starter_message,color.welcome_text)
-
+    engine.popup_message("Welcome",starter_message,color.welcome_text,False)
+    engine.story_message = story_message
     return engine
 
 def load_game(filename: str) -> Engine:
@@ -88,9 +99,16 @@ class MainMenu(input_handlers.BaseEventHandler):
 
         console.print(
             console.width // 2,
-            console.height // 2 - 4,
+            console.height // 2 - 5,
             "WINTERFJELL DEEPS",
             fg=color.menu_title,
+            alignment=tcod.CENTER,
+        )
+        console.print(
+            console.width // 2,
+            console.height // 2 - 4,
+            f"RugPG V{majorversion}.{minorversion}.{buildversion}",
+            fg=color.xp,
             alignment=tcod.CENTER,
         )
         console.print(
@@ -129,6 +147,6 @@ class MainMenu(input_handlers.BaseEventHandler):
                 traceback.print_exc()  # Print to stderr.
                 return input_handlers.PopupMessage(self, f"Failed to load save:\n{exc}")
         elif event.sym == tcod.event.K_n:
-            return input_handlers.MainGameEventHandler(new_game())
+            return input_handlers.GameStartHandler(new_game())
 
         return None

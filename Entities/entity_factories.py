@@ -4,7 +4,7 @@ from Entities.Components.equipment import Equipment
 from Entities.Components.fighter import Fighter
 from Entities.Components.inventory import Inventory
 from Entities.Components.level import Level
-from Entities.entity import Actor, Item
+from Entities.entity import Actor, Item, Entity
 
 #####################
 #   Actors/Mobs     #
@@ -41,6 +41,22 @@ troll = Actor( # real ugly lookin fellow
     level=Level(xp_given=100),
 )
 
+snowdrift = Entity(
+    char="^",
+    color=(255, 255, 255),
+    name="A snowdrift",
+)
+statue = Entity(
+    char="Ω",
+    color=(120, 100, 100),
+    name="A horribly twisted statue",
+)
+tree = Entity(
+    char="▲",
+    color=(50, 150, 50),
+    name="A hardy evergreen tree",
+    blocks_movement=True
+)
 
 ###########################
 #       Consumables       #
