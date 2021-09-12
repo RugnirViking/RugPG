@@ -183,6 +183,8 @@ class MainGameEventHandler(EventHandler):
         key = event.sym
         modifier = event.mod
 
+        #print(key)
+
         player = self.engine.player
         if key == tcod.event.K_PERIOD and modifier & (tcod.event.KMOD_LSHIFT | tcod.event.KMOD_RSHIFT) or \
                 (key == tcod.event.K_LESS and modifier & (tcod.event.KMOD_LSHIFT | tcod.event.KMOD_RSHIFT)):
@@ -204,7 +206,7 @@ class MainGameEventHandler(EventHandler):
             return InventoryActivateHandler(self.engine)
         elif key == tcod.event.K_p:
             return InventoryDropHandler(self.engine)
-        elif key == tcod.event.K_SLASH:
+        elif key == tcod.event.K_SLASH or key == tcod.event.K_MINUS:
             return LookHandler(self.engine)
         elif key == tcod.event.K_c:
             return CharacterScreenEventHandler(self.engine)
