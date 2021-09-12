@@ -61,3 +61,15 @@ fireball_scroll = Item(
     name="Scroll of Fireball",
     consumable=consumable.FireballDamageConsumable(damage=12, radius=3),
 )
+fear_scroll = Item(
+    char="~",
+    color=(115, 115, 235),
+    name="Scroll of Lesser Terror",
+    consumable=consumable.FearConsumable(number_of_turns=10),
+)
+charm_scroll = Item(
+    char="~",
+    color=(135, 235, 75),
+    name="Scroll of Lesser Mind Control",
+    consumable=consumable.CharmConsumable(number_of_turns=10),
+)

@@ -118,6 +118,76 @@ class ConfusionConsumable(Consumable):
         self.consume()
 
 
+class FearConsumable(Consumable):
+    def __init__(self, number_of_turns: int):
+        self.number_of_turns = number_of_turns
+
+    def get_action(self, consumer: Actor) -> Optional[actions.Action]:
+        self.engine.message_log.add_message(
+            "Select a target location.", color.needs_target
+        )
+        self.engine.event_handler = SingleRangedAttackHandler(
+            self.engine,
+            callback=lambda xy: actions.ItemAction(consumer, self.parent, xy),
+        )
+        return None
+
+    def activate(self, action: actions.ItemAction) -> None:
+        consumer = action.entity
+        target = action.target_actor
+
+        if not self.engine.game_map.visible[action.target_xy]:
+            raise Impossible("You cannot target an area that you cannot see.")
+        if not target:
+            raise Impossible("You must select an enemy to target.")
+        if target is consumer:
+            raise Impossible("You already fear what darkness lies in your soul.")
+
+        self.engine.message_log.add_message(
+            f"The {target.name} is overcome with fear of the {consumer.name} and runs away helplessly!",
+            color.status_effect_applied,
+        )
+        target.ai = Entities.Components.ai.FearedEnemy(
+            entity=target, previous_ai=target.ai, turns_remaining=self.number_of_turns,fear_source=consumer,
+        )
+        self.consume()
+
+
+class CharmConsumable(Consumable):
+    def __init__(self, number_of_turns: int):
+        self.number_of_turns = number_of_turns
+
+    def get_action(self, consumer: Actor) -> Optional[actions.Action]:
+        self.engine.message_log.add_message(
+            "Select a target location.", color.needs_target
+        )
+        self.engine.event_handler = SingleRangedAttackHandler(
+            self.engine,
+            callback=lambda xy: actions.ItemAction(consumer, self.parent, xy),
+        )
+        return None
+
+    def activate(self, action: actions.ItemAction) -> None:
+        consumer = action.entity
+        target = action.target_actor
+
+        if not self.engine.game_map.visible[action.target_xy]:
+            raise Impossible("You cannot target an area that you cannot see.")
+        if not target:
+            raise Impossible("You must select an enemy to target.")
+        if target is consumer:
+            raise Impossible("Charming yourself tends to lead to insanity.")
+
+        self.engine.message_log.add_message(
+            f"The {target.name}'s will is broken by the {consumer.name} and they turn on their comrades",
+            color.status_effect_applied,
+        )
+        target.ai = Entities.Components.ai.CharmedEnemy(
+            entity=target, previous_ai=target.ai, turns_remaining=self.number_of_turns,charmer=consumer,
+        )
+        self.consume()
+
+
 class FireballDamageConsumable(Consumable):
     def __init__(self, damage: int, radius: int):
         self.damage = damage
