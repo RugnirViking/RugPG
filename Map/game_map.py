@@ -13,6 +13,7 @@ from typing import Iterable, Iterator, Optional, TYPE_CHECKING
 
 from Map import tile_types
 from Entities.entity import Actor, Item
+from Map.procgen_dungeon import generate_dungeon
 
 if TYPE_CHECKING:
     from engine import Engine
@@ -53,6 +54,8 @@ class GameMap:
         self.explored = np.full(
             (width, height), fill_value=False, order="F"
         )  # Tiles the player has seen before
+
+        self.downstairs_location = (0, 0)
 
     @property
     def gamemap(self) -> GameMap:
@@ -160,3 +163,45 @@ class GameMap:
                 console.print(
                     x=entity.x, y=entity.y, string=entity.char, fg=entity.color
                 )
+
+
+class GameWorld:
+    """
+    Holds the settings for the GameMap, and generates new maps when moving down the stairs.
+    """
+
+    def __init__(
+        self,
+        *,
+        engine: Engine,
+        map_width: int,
+        map_height: int,
+        max_rooms: int,
+        room_min_size: int,
+        room_max_size: int,
+        current_floor: int = 0
+    ):
+        self.engine = engine
+
+        self.map_width = map_width
+        self.map_height = map_height
+
+        self.max_rooms = max_rooms
+
+        self.room_min_size = room_min_size
+        self.room_max_size = room_max_size
+
+        self.current_floor = current_floor
+
+    def generate_floor(self) -> None:
+
+        self.current_floor += 1
+
+        self.engine.game_map = generate_dungeon(
+            max_rooms=self.max_rooms,
+            room_min_size=self.room_min_size,
+            room_max_size=self.room_max_size,
+            map_width=self.map_width,
+            map_height=self.map_height,
+            engine=self.engine,
+        )
