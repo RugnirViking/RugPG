@@ -1,18 +1,16 @@
 from __future__ import annotations
 
-from typing import List, Tuple, TYPE_CHECKING
+from typing import Iterable, List, Reversible, Tuple, TYPE_CHECKING
 
 import numpy as np  # type: ignore
 import tcod
 
 from actions import Action, MeleeAction, MovementAction, WaitAction
-from Entities.Components.base_component import BaseComponent
 
 if TYPE_CHECKING:
     from Entities.entity import Actor
 
-class BaseAI(Action, BaseComponent):
-    entity: Actor
+class BaseAI(Action):
 
     def perform(self) -> None:
         raise NotImplementedError()

@@ -12,7 +12,7 @@ import random
 from typing import Iterable, Iterator, Optional, TYPE_CHECKING
 
 from Map import tile_types
-from Entities.entity import Actor
+from Entities.entity import Actor, Item
 
 if TYPE_CHECKING:
     from engine import Engine
@@ -55,6 +55,10 @@ class GameMap:
         )  # Tiles the player has seen before
 
     @property
+    def gamemap(self) -> GameMap:
+        return self
+
+    @property
     def actors(self) -> Iterator[Actor]:
         """Iterate over this maps living actors."""
         yield from (
@@ -62,6 +66,11 @@ class GameMap:
             for entity in self.entities
             if isinstance(entity, Actor) and entity.is_alive
         )
+
+
+    @property
+    def items(self) -> Iterator[Item]:
+        yield from (entity for entity in self.entities if isinstance(entity, Item))
 
     def get_blocking_entity_at_location(self, location_x: int, location_y: int) -> Optional[Entity]:
         for entity in self.entities:
