@@ -1,4 +1,4 @@
-# RugPG
+# Winterfjell Deeps
  
 Rug's Rougelike Engine
 Uses libcotd
@@ -7,6 +7,12 @@ Uses libcotd
  - Raycasting for visible tiles
  - Visible and remembered tiles colored nicely
  - Full lighting support with flickering effect when moving
+ - Inventory and levelling system
+ - Equipment, spell scrolls, potions
+ - Background Music 
+ - Tile inspector 
+ - Saving and loading allows for continuing runs later - game autosaves on program exit
+ - Permadeath: save is deleted upon death
 
 Controls:
  - wasd/arrow keys for movement
