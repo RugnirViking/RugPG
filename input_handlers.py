@@ -1,10 +1,13 @@
 from __future__ import annotations
-from typing import Callable, Optional, Tuple, TYPE_CHECKING, Union
+
+import textwrap
+from typing import Callable, Optional, Tuple, TYPE_CHECKING, Union, Iterable
 
 import os
 import tcod.event
 
 import actions
+from Entities import entity
 from UI import color
 from actions import (
     Action,
@@ -13,10 +16,11 @@ from actions import (
     WaitAction
 )
 import exceptions
+from Entities.entity import Item, Entity, Actor
 
 if TYPE_CHECKING:
     from engine import Engine
-    from Entities.entity import Item
+    from Entities.entity import Item, Entity
 
 MOVE_KEYS = {
     # Arrow keys.
@@ -519,12 +523,92 @@ class SelectIndexHandler(AskUserEventHandler):
         raise NotImplementedError()
 
 
+Entities_List = list[Entity]
+class TileEntityListHandler(AskUserEventHandler):
+
+    TITLE = "Tile Information"
+
+    def __init__(self, engine: Engine, x: int, y: int, entities_in_tile: Entities_List):
+        """Sets the cursor to the player when this handler is constructed."""
+        super().__init__(engine)
+        self.x=x
+        self.y=y
+        self.entities_in_tile = entities_in_tile
+        self.entities_length = len(entities_in_tile)
+        self.cursor = self.entities_length - 1
+
+    def wrap(self,string: str, width: int) -> Iterable[str]:
+        """Return a wrapped text message."""
+        for line in string.splitlines():  # Handle newlines in messages.
+            yield from textwrap.wrap(
+                line, width, expand_tabs=True,
+            )
+
+    def on_render(self, console: tcod.Console) -> None:
+        super().on_render(console)
+
+        log_console = tcod.Console(console.width - 6, console.height - 6)
+
+        # Draw a frame with a custom banner title.
+        log_console.draw_frame(0, 0, log_console.width, log_console.height)
+        log_console.print_box(
+            0, 0, log_console.width, 1, f"┤{self.TITLE}├", alignment=tcod.CENTER
+        )
+
+        y_offset = log_console.height - 2 - 1
+
+        for cur_entity in reversed(self.entities_in_tile):
+            for line in reversed(list(self.wrap(cur_entity.name, log_console.width - 2))):
+                col=color.white
+                if isinstance(cur_entity,Item):
+                    if cur_entity.equippable:
+                        col=color.status_effect_applied
+                    elif cur_entity.consumable:
+                        col=color.xp
+                elif isinstance(cur_entity,Actor):
+                    col=color.important
+
+                log_console.print(x=1, y=1 + y_offset, string=line, fg=col)
+                y_offset -= 1
+                if y_offset < 0:
+                    log_console.blit(console, 3, 3)
+                    return  # No more space to print messages.
+
+        log_console.blit(console, 3, 3)
+
+    def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[MainGameEventHandler]:
+        # Fancy conditional movement to make it feel right.
+        if event.sym in CURSOR_Y_KEYS:
+            adjust = CURSOR_Y_KEYS[event.sym]
+            if adjust < 0 and self.cursor == 0:
+                # Only move from the top to the bottom when you're on the edge.
+                self.cursor = self.entities_length - 1
+            elif adjust > 0 and self.cursor == self.entities_length - 1:
+                # Same with bottom to top movement.
+                self.cursor = 0
+            else:
+                # Otherwise move while staying clamped to the bounds of the history log.
+                self.cursor = max(0, min(self.cursor + adjust, self.entities_length - 1))
+        elif event.sym == tcod.event.K_HOME:
+            self.cursor = 0  # Move directly to the top message.
+        elif event.sym == tcod.event.K_END:
+            self.cursor = self.entities_length - 1  # Move directly to the last message.
+        else:  # Any other key moves back to the main game state.
+            return MainGameEventHandler(self.engine)
+        return None
+
 class LookHandler(SelectIndexHandler):
     """Lets the player look around using the keyboard."""
 
-    def on_index_selected(self, x: int, y: int) -> MainGameEventHandler:
+    def on_index_selected(self, x: int, y: int) -> EventHandler:
         """Return to main handler."""
-        return MainGameEventHandler(self.engine)
+        # show a list of items on the tile
+        if not self.engine.game_map.in_bounds(x, y) or not self.engine.game_map.visible[x, y]:
+            return MainGameEventHandler(self.engine)
+
+        entities_in_tile = [entity_a for entity_a in self.engine.game_map.entities if (entity_a.x == x and entity_a.y == y)]
+        return TileEntityListHandler(self.engine, x, y, entities_in_tile)
+
 
 
 class SingleRangedAttackHandler(SelectIndexHandler):

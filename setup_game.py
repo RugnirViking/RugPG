@@ -8,7 +8,9 @@ import traceback
 import random
 from typing import Optional
 
+import pygame
 import tcod
+from pygame import mixer
 
 from Entities import entity_factories
 from Map.game_map import GameWorld
@@ -24,7 +26,7 @@ background_image = tcod.image.load("menu_background.png")[:, :, :3]
 
 majorversion = 0
 minorversion = 1
-buildversion = 5
+buildversion = 6
 
 def new_game() -> Engine:
     """Return a brand new game session as an Engine instance."""
@@ -88,6 +90,10 @@ def load_game(filename: str) -> Engine:
     with open(filename, "rb") as f:
         engine = pickle.loads(lzma.decompress(f.read()))
     assert isinstance(engine, Engine)
+    pygame.key.set_repeat(500, 20)
+    mixer.init()
+
+    engine.play_song("viking1.mp3")
     return engine
 
 class MainMenu(input_handlers.BaseEventHandler):
