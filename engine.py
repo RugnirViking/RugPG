@@ -5,6 +5,7 @@ import pickle
 import subprocess
 import threading
 import multiprocessing
+import random
 from typing import TYPE_CHECKING
 
 import pygame
@@ -82,7 +83,8 @@ class Engine:
             Handles enemy movement and attacking
         :return:
         """
-        for entity in set(self.game_map.actors) - {self.player}:
+        random.seed()
+        for entity in set(self.game_map.actors):
             if entity.ai:
                 try:
                     entity.ai.perform()

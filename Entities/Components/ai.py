@@ -53,6 +53,9 @@ class HostileEnemy(BaseAI):
 
     def perform(self) -> None:
         target = self.engine.player
+        if self.entity.name=="Player":
+            print("hey")
+
         dx = target.x - self.entity.x
         dy = target.y - self.entity.y
         distance = max(abs(dx), abs(dy))  # Chebyshev distance. TODO: make this taxicab distance
@@ -70,6 +73,15 @@ class HostileEnemy(BaseAI):
             ).perform()
 
         return WaitAction(self.entity).perform()
+
+
+class PlayerAI(BaseAI):
+    def __init__(self, entity: Actor):
+        super().__init__(entity)
+
+    def perform(self) -> None:
+        print("name's player")
+        pass
 
 
 class ConfusedEnemy(BaseAI):

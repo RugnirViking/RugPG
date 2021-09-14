@@ -18,6 +18,8 @@ from actions import (
 import exceptions
 from Entities.entity import Item, Entity, Actor
 
+from Entities.Components.ai import ConfusedEnemy
+
 if TYPE_CHECKING:
     from engine import Engine
     from Entities.entity import Item, Entity
@@ -196,7 +198,10 @@ class MainGameEventHandler(EventHandler):
 
         if key in MOVE_KEYS:
             dx, dy = MOVE_KEYS[key]
-            action = BumpAction(player, dx, dy)
+            if not isinstance(player.ai,ConfusedEnemy):
+                action = BumpAction(player, dx, dy)
+            else:
+                action = WaitAction(player)
         elif key in WAIT_KEYS:
             action = WaitAction(player)
 
@@ -214,6 +219,10 @@ class MainGameEventHandler(EventHandler):
             return LookHandler(self.engine)
         elif key == tcod.event.K_c:
             return CharacterScreenEventHandler(self.engine)
+        elif key == tcod.event.K_o:
+            player.ai = ConfusedEnemy(
+                entity=player, previous_ai=player.ai, turns_remaining=10,
+            )
 
         # No valid key was pressed
         return action

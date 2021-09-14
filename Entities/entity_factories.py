@@ -1,4 +1,4 @@
-from Entities.Components.ai import HostileEnemy
+from Entities.Components.ai import HostileEnemy, PlayerAI
 from Entities.Components import consumable, equippable
 from Entities.Components.equipment import Equipment
 from Entities.Components.fighter import Fighter
@@ -13,7 +13,7 @@ player = Actor(
     char="@",
     color=(255, 255, 255),
     name="Player",
-    ai_cls=HostileEnemy,
+    ai_cls=PlayerAI,
     equipment=Equipment(),
     fighter=Fighter(hp=30, base_defense=1, base_power=2),
     inventory=Inventory(capacity=26),
