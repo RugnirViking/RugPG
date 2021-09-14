@@ -7,7 +7,6 @@ import random
 from typing import Dict, Iterator, List, Tuple, TYPE_CHECKING
 import tcod
 
-
 if TYPE_CHECKING:
     from engine import Engine
     from Entities.entity import Entity
@@ -27,9 +26,10 @@ max_monsters_by_floor = [
 item_chances: Dict[int, List[Tuple[Entity, int]]] = {
     0: [(entity_factories.health_potion, 35)],
     1: [(entity_factories.confusion_scroll, 10)],
-    2: [(entity_factories.lightning_scroll, 10),(entity_factories.fireball_scroll, 10)],
+    2: [(entity_factories.lightning_scroll, 10), (entity_factories.fireball_scroll, 10)],
     3: [(entity_factories.fear_scroll, 10)],
-    4: [(entity_factories.charm_scroll, 5), (entity_factories.fireball_scroll, 25), (entity_factories.lightning_scroll, 25), (entity_factories.sword, 5)],
+    4: [(entity_factories.charm_scroll, 5), (entity_factories.fireball_scroll, 25),
+        (entity_factories.lightning_scroll, 25), (entity_factories.sword, 5)],
     5: [(entity_factories.fear_scroll, 25)],
     6: [(entity_factories.fireball_scroll, 25), (entity_factories.chain_mail, 15)],
     7: [(entity_factories.charm_scroll, 20)],
@@ -41,6 +41,7 @@ enemy_chances: Dict[int, List[Tuple[Entity, int]]] = {
     5: [(entity_factories.troll, 30)],
     7: [(entity_factories.troll, 60)],
 }
+
 
 def get_max_value_for_floor(
         max_value_by_floor: List[Tuple[int, int]], floor: int
@@ -57,9 +58,9 @@ def get_max_value_for_floor(
 
 
 def get_entities_at_random(
-    weighted_chances_by_floor: Dict[int, List[Tuple[Entity, int]]],
-    number_of_entities: int,
-    floor: int,
+        weighted_chances_by_floor: Dict[int, List[Tuple[Entity, int]]],
+        number_of_entities: int,
+        floor: int,
 ) -> List[Entity]:
     entity_weighted_chances = {}
 
@@ -81,6 +82,7 @@ def get_entities_at_random(
     )
 
     return chosen_entities
+
 
 class RectangularRoom:
     def __init__(self, x: int, y: int, width: int, height: int):
@@ -111,7 +113,7 @@ class RectangularRoom:
         )
 
 
-def place_entities(room: RectangularRoom, dungeon: GameMap, floor_number: int,) -> None:
+def place_entities(room: RectangularRoom, dungeon: GameMap, floor_number: int, ) -> None:
     number_of_monsters = random.randint(
         0, get_max_value_for_floor(max_monsters_by_floor, floor_number)
     )
@@ -133,8 +135,9 @@ def place_entities(room: RectangularRoom, dungeon: GameMap, floor_number: int,) 
         if not any(entity.x == x and entity.y == y for entity in dungeon.entities):
             spawn_entity.spawn(dungeon, x, y)
 
+
 def tunnel_between(
-    start: Tuple[int, int], end: Tuple[int, int]
+        start: Tuple[int, int], end: Tuple[int, int]
 ) -> Iterator[Tuple[int, int]]:
     """Return an L-shaped tunnel between these two points."""
     x1, y1 = start
@@ -152,13 +155,14 @@ def tunnel_between(
     for x, y in tcod.los.bresenham((corner_x, corner_y), (x2, y2)).tolist():
         yield x, y
 
+
 def generate_dungeon(
-    max_rooms: int,
-    room_min_size: int,
-    room_max_size: int,
-    map_width: int,
-    map_height: int,
-    engine: Engine,
+        max_rooms: int,
+        room_min_size: int,
+        room_max_size: int,
+        map_width: int,
+        map_height: int,
+        engine: Engine,
 ) -> game_map.GameMap:
     """Generate a new dungeon map."""
     player = engine.player
@@ -204,3 +208,110 @@ def generate_dungeon(
         rooms.append(new_room)
 
     return dungeon
+
+
+def generate_cave(
+        map_width: int,
+        map_height: int,
+        engine: Engine,
+) -> game_map.GameMap:
+    """Generate a new dungeon map."""
+    player = engine.player
+    dungeon = game_map.GameMap(engine, map_width, map_height, entities=[player])
+
+    print("step 1")
+    # start with a grid of randomised floor and walls
+    for x in range(1, map_width - 1):
+        for y in range(1, map_height - 1):
+            val = random.randrange(0, 2)
+            if val == 1:
+                dungeon.tiles[x, y] = tile_types.floor
+    print("step 2")
+
+    for x in range(0, 4):
+        dungeon = apply_cave_automata(map_width, map_height, engine, dungeon)
+    print("step 3")
+
+    for x in range(0, 3):
+        dungeon = apply_erode_automata(map_width, map_height, engine, dungeon)
+    print("step 4")
+
+    for x in range(1, map_width - 1):
+        for y in range(1, map_height - 1):
+            neighbors = get_neighbors(x, y, dungeon)
+            if neighbors == 0:
+                player.place(x, y, dungeon)
+                dungeon.tiles[x-1, y] = tile_types.down_stairs
+
+                dungeon.downstairs_location = (x-1, y)
+                print("step 5")
+                return dungeon
+
+
+def get_neighbors(
+        x: int,
+        y: int,
+        dungeon: game_map.GameMap,
+) -> int:
+    neighbors = 0
+    for i in range(-1, 2):
+        for j in range(-1, 2):
+            if i == 0 and j == 0:
+                pass
+            else:
+                if dungeon.tiles[x + i, y + j] == tile_types.wall:
+                    neighbors = neighbors + 1
+
+    return neighbors
+
+
+def apply_cave_automata(
+        map_width: int,
+        map_height: int,
+        engine: Engine,
+        dungeon: game_map.GameMap,
+) -> game_map.GameMap:
+    player = engine.player
+    new_dungeon = game_map.GameMap(engine, map_width, map_height, entities=[player])
+    # apply
+    for x in range(1, map_width - 1):
+        for y in range(1, map_height - 1):
+            neighbors = get_neighbors(x, y, dungeon)
+            if dungeon.tiles[x, y] == tile_types.wall:
+                if neighbors < 3:
+                    new_dungeon.tiles[x, y] = tile_types.floor
+                else:
+                    new_dungeon.tiles[x, y] = tile_types.wall
+            else:
+                if neighbors > 5:
+                    new_dungeon.tiles[x, y] = tile_types.wall
+                else:
+                    new_dungeon.tiles[x, y] = tile_types.floor
+
+    return new_dungeon
+
+
+def apply_erode_automata(
+        map_width: int,
+        map_height: int,
+        engine: Engine,
+        dungeon: game_map.GameMap,
+) -> game_map.GameMap:
+    player = engine.player
+    new_dungeon = game_map.GameMap(engine, map_width, map_height, entities=[player])
+    # apply
+    for x in range(1, map_width - 1):
+        for y in range(1, map_height - 1):
+            neighbors = get_neighbors(x, y, dungeon)
+            if dungeon.tiles[x, y] == tile_types.wall:
+                if neighbors < 5:
+                    new_dungeon.tiles[x, y] = tile_types.floor
+                else:
+                    new_dungeon.tiles[x, y] = tile_types.wall
+            else:
+                if neighbors > 4:
+                    new_dungeon.tiles[x, y] = tile_types.wall
+                else:
+                    new_dungeon.tiles[x, y] = tile_types.floor
+
+    return new_dungeon
