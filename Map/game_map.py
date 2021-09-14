@@ -56,7 +56,11 @@ class GameMap:
             (width, height), fill_value=False, order="F"
         )  # Tiles the player has seen before
 
+        self.seen = np.full(
+            (self.width, self.height), fill_value=False, order="F"
+        )
         self.downstairs_location = (0, 0)
+        self.num = 0
 
     @property
     def gamemap(self) -> GameMap:
@@ -164,6 +168,22 @@ class GameMap:
                 console.print(
                     x=entity.x, y=entity.y, string=entity.char, fg=entity.color
                 )
+
+    def flood_reveal(self, x, y,first=False):
+
+
+        for i in range(0,self.width):
+            for j in range(0, self.height):
+                if i>0 and j>0 and i<self.width-1 and j<self.height-1:
+                    neighboringfloor=0
+                    for i2 in range(-1, 2):
+                        for j2 in range(-1, 2):
+                            if self.tiles[i+i2,j+j2]:
+                                if self.tiles[i+i2,j+j2][0]:
+                                    neighboringfloor=neighboringfloor+1
+                    if neighboringfloor>0:
+                        self.visible[i, j] = True
+                        self.explored[i, j] = True
 
 
 class GameWorld:

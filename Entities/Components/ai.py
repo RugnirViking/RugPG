@@ -80,7 +80,7 @@ class PlayerAI(BaseAI):
         super().__init__(entity)
 
     def perform(self) -> None:
-        print("name's player")
+        #todo player stuff here
         pass
 
 

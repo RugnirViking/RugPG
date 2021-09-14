@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sys
 import textwrap
 from typing import Callable, Optional, Tuple, TYPE_CHECKING, Union, Iterable
 
@@ -223,6 +224,10 @@ class MainGameEventHandler(EventHandler):
             player.ai = ConfusedEnemy(
                 entity=player, previous_ai=player.ai, turns_remaining=10,
             )
+        elif key == tcod.event.K_l:
+
+            self.engine.game_map.flood_reveal(player.x,player.y,True)
+            return action
 
         # No valid key was pressed
         return action
