@@ -1,7 +1,7 @@
 # Winterfjell Deeps
  
 Rug's Rougelike Engine
-Uses libcotd
+Thanks to: TStand90 for their excellent tutorial, plus the authors of libcotd, pygame (for sound) and easing-functions python libraries
 
 ## Features
  - Raycasting for visible tiles
