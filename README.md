@@ -3,6 +3,7 @@
 Rug's Rougelike Engine
 
 ![Screenshot of the game](https://github.com/RugnirViking/RugPG/blob/main/screenshot1.PNG)
+
 Thanks to: TStand90 for their excellent tutorial, plus the authors of libcotd, pygame (for sound) and easing-functions python libraries
 
 ## Features
