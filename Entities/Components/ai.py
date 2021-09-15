@@ -53,8 +53,6 @@ class HostileEnemy(BaseAI):
 
     def perform(self) -> None:
         target = self.engine.player
-        if self.entity.name=="Player":
-            print("hey")
 
         dx = target.x - self.entity.x
         dy = target.y - self.entity.y

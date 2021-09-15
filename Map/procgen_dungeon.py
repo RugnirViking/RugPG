@@ -1,12 +1,15 @@
 from __future__ import annotations
 
+import numpy as np
+
 from Entities import entity_factories
 from Map import tile_types, game_map
 import Map.tile_types
 import random
 from typing import Dict, Iterator, List, Tuple, TYPE_CHECKING
 import tcod
-
+import cProfile
+import time
 if TYPE_CHECKING:
     from engine import Engine
     from Entities.entity import Entity
@@ -216,25 +219,24 @@ def generate_cave(
         engine: Engine,
 ) -> game_map.GameMap:
     """Generate a new dungeon map."""
+    start = time.time()
+    print("hello")
+
     player = engine.player
     dungeon = game_map.GameMap(engine, map_width, map_height, entities=[player])
 
-    print("step 1")
     # start with a grid of randomised floor and walls
     for x in range(1, map_width - 1):
         for y in range(1, map_height - 1):
             val = random.randrange(0, 2)
             if val == 1:
                 dungeon.tiles[x, y] = tile_types.floor
-    print("step 2")
 
-    for x in range(0, 4):
+    for x in range(0, 1):
         dungeon = apply_cave_automata(map_width, map_height, engine, dungeon)
-    print("step 3")
 
-    for x in range(0, 3):
+    for x in range(0, 1):
         dungeon = apply_erode_automata(map_width, map_height, engine, dungeon)
-    print("step 4")
 
     for x in range(1, map_width - 1):
         for y in range(1, map_height - 1):
@@ -244,7 +246,8 @@ def generate_cave(
                 dungeon.tiles[x-1, y] = tile_types.down_stairs
 
                 dungeon.downstairs_location = (x-1, y)
-                print("step 5")
+                end = time.time()
+                print("end:",end - start)
                 return dungeon
 
 
@@ -254,8 +257,8 @@ def get_neighbors(
         dungeon: game_map.GameMap,
 ) -> int:
     neighbors = 0
-    for i in range(-1, 2):
-        for j in range(-1, 2):
+    for i in [-1,0,1]:
+        for j in [-1,0,1]:
             if i == 0 and j == 0:
                 pass
             else:

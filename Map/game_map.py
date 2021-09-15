@@ -14,6 +14,7 @@ from typing import Iterable, Iterator, Optional, TYPE_CHECKING
 from Entities import entity_factories
 from Map import tile_types
 from Entities.entity import Actor, Item
+from Map.procgen_cave import generate_cave2
 from Map.procgen_dungeon import generate_dungeon, generate_cave
 
 if TYPE_CHECKING:
@@ -218,10 +219,7 @@ class GameWorld:
 
         self.current_floor += 1
         random.seed()
-        self.engine.game_map = generate_cave(
-            #max_rooms=self.max_rooms,
-            #room_min_size=self.room_min_size,
-            #room_max_size=self.room_max_size,
+        self.engine.game_map = generate_cave2(
             map_width=self.map_width,
             map_height=self.map_height,
             engine=self.engine,

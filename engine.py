@@ -42,9 +42,9 @@ class Engine:
         mixer.init()
 
         self.play_song("viking1.mp3")
-        # self.mixer.music.load('viking1.mp3')
+        mixer.music.load('viking1.mp3')
 
-        # self.mixer.music.play(-1)
+        mixer.music.play(-1)
 
     # play the song and fade in the song to the max_volume
     def play_song(self, song_file):
