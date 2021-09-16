@@ -24,16 +24,24 @@ class Config:
                  ]
 
     def __init__(self):
-        filename = "config.ini"
+        filename="config.ini"
+        self.filename = filename
         self.values = {}
         if check_for_config(filename):
-            if self.load_config(filename):
-                pass
-            else:
+            try:
+                if self.load_config(filename):
+                    pass
+                else:
+                    # error with config. rename broken config file and create a new one from default
+                    self.rename_config(filename)
+                    self.set_to_defaults()
+                    self.create_config_file(filename)
+            except:
                 # error with config. rename broken config file and create a new one from default
                 self.rename_config(filename)
                 self.set_to_defaults()
                 self.create_config_file(filename)
+
         else:
             # no config file, create fresh one from defaults
             self.set_to_defaults()
@@ -49,7 +57,7 @@ class Config:
         return val
 
     def create_config_file(self, filename: str):
-        f = open(filename, "a")
+        f = open(filename, 'w')
         f.write("# Winterfjell Deeps Config File. lines beginning with '#' are comments")
         x = 0
 
@@ -78,11 +86,13 @@ class Config:
             if line.startswith("#"):
                 # ignore comments
                 continue
-
             if len(x) < 2:
                 # at least one value
                 continue
-            self.values[x[0]] = self.VAL_TYPES[count](x[1])
+            if self.VAL_TYPES[count]==bool:
+                self.values[x[0]] = x[1]=="True"
+            else:
+                self.values[x[0]] = self.VAL_TYPES[count](x[1])
             count += 1
 
         file1.close()
@@ -99,4 +109,16 @@ class Config:
 
     def rename_config(self, filename: str):
         new_name = filename + "_old"
+        os.remove(new_name)
         os.rename(filename, new_name)
+
+    def load_controls_values(self, controls):
+        mapping={
+            "Master Volume":"MasterVolume",
+            "Music Volume":"MusicVolume",
+            "Sound Effects Volume":"GameVolume",
+            "Allow Debug Commands":"AllowDebug",
+        }
+        for key in controls:
+            self.values[mapping[key]]=controls[key][1]
+        self.create_config_file(self.filename)

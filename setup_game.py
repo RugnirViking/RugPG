@@ -101,10 +101,10 @@ class MainMenu(input_handlers.BaseEventHandler):
     """Handle the main menu rendering and input."""
     def __init__(self):
         self.config=Config()
-        print(self.config)
 
     def on_render(self, console: tcod.Console) -> None:
         """Render the main menu on a background image."""
+        pygame.key.set_repeat(500, 20)
         console.draw_semigraphics(background_image, 0, 0)
 
         console.print(
@@ -159,6 +159,6 @@ class MainMenu(input_handlers.BaseEventHandler):
         elif event.sym == tcod.event.K_n:
             return input_handlers.GameStartHandler(new_game(self.config))
         elif event.sym == tcod.event.K_o:
-            return input_handlers.OptionsMenuHandler(self)
+            return input_handlers.OptionsMenuHandler(self,self.config)
 
         return None

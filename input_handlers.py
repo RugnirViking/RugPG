@@ -223,14 +223,15 @@ class MainGameEventHandler(EventHandler):
             return LookHandler(self.engine)
         elif key == tcod.event.K_c:
             return CharacterScreenEventHandler(self.engine)
-        elif key == tcod.event.K_o:
-            player.ai = ConfusedEnemy(
-                entity=player, previous_ai=player.ai, turns_remaining=10,
-            )
-        elif key == tcod.event.K_l:
+        if self.engine.config.values["AllowDebug"]:
+            if key == tcod.event.K_o:
+                player.ai = ConfusedEnemy(
+                    entity=player, previous_ai=player.ai, turns_remaining=10,
+                )
+            elif key == tcod.event.K_l:
 
-            self.engine.game_map.flood_reveal(player.x, player.y, True)
-            return action
+                self.engine.game_map.flood_reveal(player.x, player.y, True)
+                return action
 
         # No valid key was pressed
         return action
@@ -780,10 +781,23 @@ class InventoryDropHandler(InventoryEventHandler):
 
 
 class OptionsMenuHandler(BaseEventHandler):
+    MAX_INDEX = 4
 
     def __init__(self, parent: BaseEventHandler, config: Config):
         self.parent = parent
         self.config = config
+        self.selected_index = 0
+        self.controls = {
+            "Master Volume": ["pct", self.config.values["MasterVolume"]],
+            "Music Volume": ["pct", self.config.values["MusicVolume"]],
+            "Sound Effects Volume": ["pct", self.config.values["GameVolume"]],
+            "Allow Debug Commands": ["bool", self.config.values["AllowDebug"]],
+        }
+        self.keys = ["Master Volume",
+                     "Music Volume",
+                     "Sound Effects Volume",
+                     "Allow Debug Commands",
+        ]
 
     def on_render(self, console: tcod.Console) -> None:
         console.tiles_rgb["fg"] //= 8
@@ -793,14 +807,25 @@ class OptionsMenuHandler(BaseEventHandler):
         console.print_box(
             3, 3, console.width - 6, 1, f"┤Options├", alignment=tcod.CENTER
         )
-        console.print(
-            console.width // 2,
-            console.height // 8,
-            "eggs eggs are very nice I eat eggs fried with rice",
-            fg=color.white,
-            bg=color.black,
-            alignment=tcod.CENTER,
-        )
+
+        control_count = 0
+        for key in self.controls:
+            self.render_control(console, self.controls[key][0], key, control_count,
+                                control_count == self.selected_index)
+            control_count += 1
+
+    @property
+    def selected_index(self):
+        return self._selected_index
+
+    @selected_index.setter
+    def selected_index(self, value):
+        self._selected_index = value
+        if self._selected_index > self.MAX_INDEX - 1:
+            self._selected_index = self._selected_index - self.MAX_INDEX
+
+        if self._selected_index < 0:
+            self._selected_index = self._selected_index + self.MAX_INDEX
 
     def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[ActionOrHandler]:
         action: Optional[Action] = None
@@ -808,5 +833,61 @@ class OptionsMenuHandler(BaseEventHandler):
         key = event.sym
         modifier = event.mod
 
+        if key in MOVE_KEYS:
+            dx, dy = MOVE_KEYS[key]
+            self.selected_index = self.selected_index + dy
+            if dx:
+                self.control_input(dx)
+        elif key == tcod.event.K_ESCAPE:
+            self.save_values()
+            return self.parent
+
         # No valid key was pressed
-        return self.parent
+
+    def render_control(self, console: tcod.Console,
+                       control_type: str,
+                       key: str,
+                       control_count: int,
+                       selected: bool = False):
+        col = color.options_control
+        if selected:
+            col = color.options_control_selected
+        if control_type == "pct":
+            console.print(
+                8,
+                (console.height // 8) + control_count * 2,
+                f"{key}: ",
+                fg=col,
+                bg=color.black,
+                alignment=tcod.LEFT,
+            )
+            console.print(
+                8 + len(key) + 2,
+                (console.height // 8) + control_count * 2,
+                f"{str(int(self.controls[key][1] * 100))}%",
+                fg=col,
+                bg=color.black,
+                alignment=tcod.LEFT,
+            )
+        elif control_type == "bool":
+            console.print(
+                8,
+                (console.height // 8) + control_count * 2,
+                f"{key}: {str(self.controls[key][1])}",
+                fg=col,
+                bg=color.black,
+                alignment=tcod.LEFT,
+            )
+
+    def control_input(self, dy):
+        index = self.selected_index
+        key = self.keys[index]
+        type = self.controls[key][0]
+        cur_val = self.controls[key][1]
+        if type == "pct":
+            self.controls[key][1] = min(max(0, cur_val + dy * 0.05), 1)
+        if type == "bool":
+            self.controls[key][1] = not cur_val
+
+    def save_values(self):
+        self.config.load_controls_values(self.controls)

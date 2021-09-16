@@ -41,7 +41,6 @@ class Engine:
         self.max_volume = 400
         self.current_volume = 0
         self.config=config
-        pygame.key.set_repeat(500, 20)
         mixer.init()
 
         self.play_song("viking1.mp3")

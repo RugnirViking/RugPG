@@ -28,3 +28,6 @@ equipped = (0x8F, 0x8F, 0xCF)
 
 menu_title = (255, 255, 63)
 menu_text = white
+
+options_control = (100, 150, 100)
+options_control_selected = (200, 255, 200)
