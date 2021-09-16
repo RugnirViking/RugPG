@@ -9,6 +9,8 @@ from Entities.entity import Actor, Item, Entity
 #####################
 #   Actors/Mobs     #
 #####################
+from Entities.render_order import RenderOrder
+
 player = Actor(
     char="@",
     color=(255, 255, 255),
@@ -18,6 +20,8 @@ player = Actor(
     fighter=Fighter(hp=30, base_defense=1, base_power=2),
     inventory=Inventory(capacity=26),
     level=Level(level_up_base=200),
+    emits_light=True,
+    light_level=14,
 )
 
 orc = Actor( # "lean", green and mean
@@ -26,7 +30,7 @@ orc = Actor( # "lean", green and mean
     name="Orc",
     ai_cls=HostileEnemy,
     equipment=Equipment(),
-    fighter=Fighter(hp=10, base_defense=0, base_power=3),
+    fighter=Fighter(hp=10, base_defense=0, base_power=3, will_chance=0.8),
     inventory=Inventory(capacity=0), # TODO: consider allowing enemies to pick up items
     level=Level(xp_given=35),
 )
@@ -36,7 +40,7 @@ troll = Actor( # real ugly lookin fellow
     name="Troll",
     ai_cls=HostileEnemy,
     equipment=Equipment(),
-    fighter=Fighter(hp=16, base_defense=1, base_power=4),
+    fighter=Fighter(hp=16, base_defense=1, base_power=4, will_chance=0.95),
     inventory=Inventory(capacity=0),
     level=Level(xp_given=100),
 )
@@ -50,12 +54,51 @@ statue = Entity(
     char="Ω",
     color=(120, 100, 100),
     name="A horribly twisted statue",
+    blocks_movement=True,
 )
 tree = Entity(
     char="▲",
     color=(50, 150, 50),
     name="A hardy evergreen tree",
     blocks_movement=True
+)
+
+table = Entity(
+    char="┬",
+    color=(70, 50, 0),
+    name="A wooden table",
+    blocks_movement=True,
+    render_order=RenderOrder.FURNITURE
+)
+bedroll = Entity(
+    char="º",
+    color=(170, 150, 100),
+    name="A crude linen bedroll",
+    blocks_movement=False,
+    render_order=RenderOrder.FURNITURE
+)
+barrel = Entity(
+    char="o",
+    color=(150, 130, 50),
+    name="A barrel of foul-smelling liquid",
+    blocks_movement=False,
+    render_order=RenderOrder.FURNITURE
+)
+chair = Entity(
+    char="h",
+    color=(70, 50, 0),
+    name="A wooden chair",
+    blocks_movement=False,
+    render_order=RenderOrder.FURNITURE
+)
+torch = Entity(
+    char="δ",
+    color=(150, 110, 50),
+    name="A flickering brazier",
+    blocks_movement=True,
+    render_order=RenderOrder.FURNITURE,
+    emits_light=True,
+    light_level=10,
 )
 
 ###########################

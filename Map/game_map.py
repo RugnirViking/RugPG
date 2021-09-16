@@ -118,9 +118,16 @@ class GameMap:
         )
         cost = numpy.ones((self.width, self.height), dtype=numpy.int8)
         dist = numpy.zeros((self.width, self.height), dtype=numpy.int8)
+        entities_sorted_for_rendering = sorted(
+            self.entities, key=lambda x: x.render_order.value
+        )
+
         """To add more light sources we can add more of the below line. For now its just the player. 
             We add a random offset to simulate flickering light"""
-        dist[playerx, playery] = -14 + random.uniform(-1.5, 1.5)
+        for entity in entities_sorted_for_rendering:
+            if entity.emits_light:
+                dist[entity.x, entity.y] = -entity.light_level + random.uniform(-1.5, 1.5)
+
         for x in range(self.width):
             for y in range(self.height):
                 cost[x, y] = 1 if self.tiles["transparent"][x][y] else 2
@@ -160,9 +167,6 @@ class GameMap:
         console.tiles_rgb[0:self.width, 0:self.height] = tilestorender
 
 
-        entities_sorted_for_rendering = sorted(
-            self.entities, key=lambda x: x.render_order.value
-        )
         for entity in entities_sorted_for_rendering:
             # Only print entities that are in the FOV
             if self.visible[entity.x, entity.y]:

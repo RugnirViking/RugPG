@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 from typing import Optional, Tuple, TYPE_CHECKING
@@ -9,6 +8,7 @@ import exceptions
 if TYPE_CHECKING:
     from engine import Engine
     from Entities.entity import Actor, Entity, Item
+
 
 class Action:
     def __init__(self, entity: Actor) -> None:
@@ -30,6 +30,7 @@ class Action:
         This method must be overridden by Action subclasses.
         """
         raise NotImplementedError()
+
 
 class PickupAction(Action):
     """Pickup an item and add it to the inventory, if there is room for it."""
@@ -56,9 +57,10 @@ class PickupAction(Action):
 
         raise exceptions.Impossible("There is nothing here to pick up.")
 
+
 class ItemAction(Action):
     def __init__(
-        self, entity: Actor, item: Item, target_xy: Optional[Tuple[int, int]] = None
+            self, entity: Actor, item: Item, target_xy: Optional[Tuple[int, int]] = None
     ):
         super().__init__(entity)
         self.item = item
@@ -107,7 +109,7 @@ class TakeStairsAction(Action):
         """
         if (self.entity.x, self.entity.y) == self.engine.game_map.downstairs_location:
             self.engine.game_world.generate_floor()
-            if self.engine.game_world.current_floor==1:
+            if self.engine.game_world.current_floor == 1:
                 self.engine.message_log.add_message(
                     "You climb down the stone steps, wondering what horrors await you below", color.descend
                 )
@@ -129,6 +131,7 @@ class ActionWithDirection(Action):
 
     def perform(self, engine: Engine, entity: Entity) -> None:
         raise NotImplementedError()
+
     @property
     def dest_xy(self) -> Tuple[int, int]:
         """Returns this actions destination."""
@@ -153,10 +156,16 @@ class MeleeAction(ActionWithDirection):
         target = self.target_actor
         if not target:
             raise exceptions.Impossible("Nothing to attack.")
+        damage=0
+        if target.melee_neighbors()>3:
+            damage = self.entity.fighter.power
+        elif target.melee_neighbors()>1:
+            damage = self.entity.fighter.power - target.fighter.defense/2
+        else:
+            damage = self.entity.fighter.power - target.fighter.defense
 
-        damage = self.entity.fighter.power - target.fighter.defense
-        attack_desc =""
-        if (target.name=="Player"):
+        attack_desc = ""
+        if (target.name == "Player"):
             attack_desc = f"{self.entity.name.capitalize()} attacks you"
         else:
             attack_desc = f"{self.entity.name.capitalize()} attacks the {target.name.capitalize()}"
@@ -168,16 +177,16 @@ class MeleeAction(ActionWithDirection):
 
         if damage > 0:
             self.engine.message_log.add_message(
-                f"{attack_desc} for {damage} hit points.", attack_color
+                f"{attack_desc} for {int(damage)} hit points.", attack_color
             )
-            target.fighter.hp -= damage
+            target.fighter.melee_attack(int(damage),self.entity)
         else:
             self.engine.message_log.add_message(
                 f"{attack_desc} but does no damage.", attack_color
             )
 
-class MovementAction(ActionWithDirection):
 
+class MovementAction(ActionWithDirection):
 
     def perform(self) -> None:
         dest_x, dest_y = self.dest_xy
@@ -193,13 +202,37 @@ class MovementAction(ActionWithDirection):
 
         self.entity.move(self.dx, self.dy)
 
+
 class BumpAction(ActionWithDirection):
     """
         Bump checks if an impassable entity is in the direction being bumped and attacks if there is and tries to
         move there if there isn't
     """
+
     def perform(self) -> None:
-        if self.target_actor:
+        if self.target_actor and self.target_actor.is_alive:
+            print(self.target_actor.is_alive,self.target_actor.name,self.entity.name)
             return MeleeAction(self.entity, self.dx, self.dy).perform()
         else:
             return MovementAction(self.entity, self.dx, self.dy).perform()
+
+
+class TeleportAction(Action):
+    def __init__(
+            self, entity: Actor, target_xy: Optional[Tuple[int, int]] = None
+    ):
+        super().__init__(entity)
+        if not target_xy:
+            target_xy = entity.x, entity.y
+        self.target_xy = target_xy
+
+    @property
+    def target_actor(self) -> Optional[Actor]:
+        """Return the actor at this actions destination."""
+        return self.engine.game_map.get_actor_at_location(*self.target_xy)
+
+    def perform(self) -> None:
+        """Invoke the items ability, this action will be given to provide context."""
+        self.entity.x=self.target_xy[0]
+        self.entity.x=self.target_xy[1]
+        self.entity.place(self.target_xy[0], self.target_xy[1], self.entity.gamemap)

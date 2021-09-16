@@ -229,9 +229,13 @@ class MainGameEventHandler(EventHandler):
                     entity=player, previous_ai=player.ai, turns_remaining=10,
                 )
             elif key == tcod.event.K_l:
-
                 self.engine.game_map.flood_reveal(player.x, player.y, True)
                 return action
+            elif key == tcod.event.K_k:
+                return SingleRangedAttackHandler(
+                    self.engine,
+                    callback=lambda xy: actions.TeleportAction(player, xy),
+                )
 
         # No valid key was pressed
         return action
@@ -247,9 +251,12 @@ class GameOverEventHandler(EventHandler):
     def ev_quit(self, event: tcod.event.Quit) -> None:
         self.on_quit()
 
-    def ev_keydown(self, event: tcod.event.KeyDown) -> None:
-        if event.sym == tcod.event.K_ESCAPE:
+    def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[ActionOrHandler]:
+        key = event.sym
+        if key == tcod.event.K_ESCAPE:
             self.on_quit()
+        elif key == tcod.event.K_v:
+            return HistoryViewer(self.engine)
 
 
 CURSOR_Y_KEYS = {

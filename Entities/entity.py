@@ -18,12 +18,13 @@ if TYPE_CHECKING:
 
 T = TypeVar("T", bound="Entity")
 
+
 class Entity:
     """
     A generic object to represent players, enemies, items, etc.
     """
 
-    parent: Union[GameMap, Inventory] # parent can be either the gamemap or an inventory
+    parent: Union[GameMap, Inventory]  # parent can be either the gamemap or an inventory
 
     def __init__(
             self,
@@ -35,6 +36,8 @@ class Entity:
             name: str = "<Unnamed>",
             blocks_movement: bool = False,
             render_order: RenderOrder = RenderOrder.CORPSE,
+            emits_light: bool = False,
+            light_level: int = 0,
     ):
         self.x = x
         self.y = y
@@ -43,7 +46,8 @@ class Entity:
         self.name = name
         self.blocks_movement = blocks_movement
         self.render_order = render_order
-
+        self.emits_light = emits_light
+        self.light_level=light_level
 
         if parent:
             # If parent isn't provided now then it will be set later.
@@ -85,20 +89,23 @@ class Entity:
         self.x += dx
         self.y += dy
 
+
 class Actor(Entity):
     def __init__(
-        self,
-        *,
-        x: int = 0,
-        y: int = 0,
-        char: str = "?",
-        color: Tuple[int, int, int] = (255, 255, 255),
-        name: str = "<Unnamed>",
-        ai_cls: Type[BaseAI],
-        equipment: Equipment,
-        fighter: Fighter,
-        inventory: Inventory,
-        level: Level,
+            self,
+            *,
+            x: int = 0,
+            y: int = 0,
+            char: str = "?",
+            color: Tuple[int, int, int] = (255, 255, 255),
+            name: str = "<Unnamed>",
+            ai_cls: Type[BaseAI],
+            equipment: Equipment,
+            fighter: Fighter,
+            inventory: Inventory,
+            level: Level,
+            emits_light: bool = False,
+            light_level: int = 0,
     ):
         super().__init__(
             x=x,
@@ -108,6 +115,8 @@ class Actor(Entity):
             name=name,
             blocks_movement=True,
             render_order=RenderOrder.ACTOR,
+            emits_light=emits_light,
+            light_level=light_level,
         )
 
         self.ai: Optional[BaseAI] = ai_cls(self)
@@ -129,17 +138,32 @@ class Actor(Entity):
         """Returns True as long as this actor can perform actions."""
         return bool(self.ai)
 
-class Item(Entity): # TODO: make this into its own file
+    def melee_neighbors(self):
+        num=0
+        for x2 in [-1,0,1]:
+            for y2 in [-1,0,1]:
+                if x2==0 and y2==0:
+                    pass
+                else:
+                    actor = self.gamemap.get_actor_at_location(self.x+x2,self.y+y2)
+                    if actor:
+                        num=num+1
+
+        return num
+
+
+
+class Item(Entity):  # TODO: make this into its own file
     def __init__(
-        self,
-        *,
-        x: int = 0,
-        y: int = 0,
-        char: str = "?",
-        color: Tuple[int, int, int] = (255, 255, 255),
-        name: str = "<Unnamed>",
-        consumable: Optional[Consumable] = None,
-        equippable: Optional[Equippable] = None,
+            self,
+            *,
+            x: int = 0,
+            y: int = 0,
+            char: str = "?",
+            color: Tuple[int, int, int] = (255, 255, 255),
+            name: str = "<Unnamed>",
+            consumable: Optional[Consumable] = None,
+            equippable: Optional[Equippable] = None,
     ):
         super().__init__(
             x=x,

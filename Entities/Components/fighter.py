@@ -1,4 +1,8 @@
 from __future__ import annotations
+
+import random
+
+from Entities.Components.ai import FearedEnemy
 from Entities.Components.base_component import BaseComponent
 from UI import color
 from Entities.render_order import RenderOrder
@@ -13,11 +17,12 @@ if TYPE_CHECKING:
 class Fighter(BaseComponent):
     parent: Actor
 
-    def __init__(self, hp: int, base_defense: int, base_power: int):
+    def __init__(self, hp: int, base_defense: int, base_power: int,will_chance: float=1.0):
         self.max_hp = hp
         self._hp = hp
         self.base_defense = base_defense
         self.base_power = base_power
+        self.will_chance=will_chance
 
     @property
     def hp(self) -> int:
@@ -87,3 +92,15 @@ class Fighter(BaseComponent):
 
     def take_damage(self, amount: int) -> None:
         self.hp -= amount
+
+    def melee_attack(self, damage, entity):
+        self.hp -= damage
+        n=random.random()
+        if self.hp<self.max_hp/3 and n>self.will_chance and self.parent.is_alive:
+            self.engine.message_log.add_message(
+                f"The {self.parent.name} loses its nerve in battle and runs for its life from the {entity.name}!",
+                color.status_effect_applied,
+            )
+            self.parent.ai = FearedEnemy(
+                entity=self.parent, previous_ai=self.parent.ai, turns_remaining=99, fear_source=entity,
+            )

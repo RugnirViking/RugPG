@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from __future__ import annotations
-from typing import Any, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING, List
 from skimage.morphology import flood_fill
 import numpy as np
 import time
@@ -8,7 +8,10 @@ import scipy.signal  # type: ignore
 from numpy.typing import NDArray
 import random
 
+from Entities import entity_factories
 from Map import tile_types, game_map
+from Map.procgen_dungeon import get_max_value_for_floor, max_monsters_by_floor, max_items_by_floor, \
+    get_entities_at_random, enemy_chances, item_chances
 
 if TYPE_CHECKING:
     from engine import Engine
@@ -100,7 +103,7 @@ def generate_cave2(
         rejected = rejected + 1
         if floor_count > 1600:
             valid = False
-        if floor_count > 1800:
+        if floor_count > 2000:
             valid = True
 
     rejected = rejected - 1
@@ -136,12 +139,6 @@ def generate_cave2(
             valid = distance > 10
     tiles2[stairsy, stairsx] = 4
 
-    for x in range(0, WIDTH - 1):
-        for y in range(0, HEIGHT - 1):
-            CHANCE_LIGHT=0.4
-            x=random.random()
-
-
     player = engine.player
     dungeon = game_map.GameMap(engine, WIDTH, HEIGHT, entities=[player])
     for x in range(0, WIDTH - 1):
@@ -155,6 +152,67 @@ def generate_cave2(
             if num==4:
                 dungeon.tiles[x, y] = tile_types.down_stairs
                 dungeon.downstairs_location = (x, y)
+
+    for x in range(1, WIDTH - 2):
+        for y in range(1, HEIGHT - 2):
+            CHANCE_LIGHT = 0.01
+            n = random.random()
+            dx = x - playerx
+            dy = y - playery
+            distance = max(abs(dx), abs(dy))
+            if get_neighbors(y, x, tiles2) == 0 and distance>10:
+                if n < CHANCE_LIGHT:
+                    floor_number = engine.game_world.current_floor
+                    n=random.random()
+                    if n<0.3:
+                        entity_factories.torch.spawn(dungeon, x, y)
+                        for x2 in [-1,0,1]:
+                            for y2 in [-1,0,1]:
+                                n=random.random()
+                                if x2==0 and y2==0:
+                                    pass
+                                elif n<0.3:
+                                    if not dungeon.get_blocking_entity_at_location(x+x2, y+y2):
+                                        entity_factories.bedroll.spawn(dungeon, x+x2, y+y2)
+
+
+                    elif n<0.6:
+                        entity_factories.table.spawn(dungeon, x, y)
+                        for x2 in [-1,0,1]:
+                            for y2 in [-1,0,1]:
+                                n=random.random()
+                                if x2==0 and y2==0:
+                                    pass
+                                elif n<0.3:
+                                    if not dungeon.get_blocking_entity_at_location(x+x2, y+y2):
+                                        entity_factories.chair.spawn(dungeon, x+x2, y+y2)
+                                elif n<0.4:
+                                    if not dungeon.get_blocking_entity_at_location(x+x2, y+y2):
+                                        entity_factories.barrel.spawn(dungeon, x+x2, y+y2)
+                    else:
+                        entity_factories.statue.spawn(dungeon, x, y)
+
+
+                    number_of_monsters = random.randint(
+                        0, get_max_value_for_floor(max_monsters_by_floor, floor_number)
+                    )
+                    number_of_items = random.randint(
+                        0, get_max_value_for_floor(max_items_by_floor, floor_number)
+                    )
+
+                    monsters: List[Entity] = get_entities_at_random(
+                        enemy_chances, number_of_monsters, floor_number
+                    )
+                    items: List[Entity] = get_entities_at_random(
+                        item_chances, number_of_items, floor_number
+                    )
+
+                    for spawn_entity in monsters + items:
+                        x2 = random.randint(-1, 1)
+                        y2 = random.randint(-1, 1)
+
+                        if not any(entity.x == x + x2 and entity.y == y + y2 and entity.blocks_movement for entity in dungeon.entities):
+                            spawn_entity.spawn(dungeon, x + x2, y + y2)
 
     print("rejected maps: ", rejected, " blob size: ", floor_count)
     end = time.time()
