@@ -71,7 +71,7 @@ def new_game(config: Config) -> Engine:
     )
 
     dagger = copy.deepcopy(entity_factories.dagger)
-    leather_armor = copy.deepcopy(entity_factories.leather_armor)
+    leather_armor = copy.deepcopy(entity_factories.red_shroud)
 
     dagger.parent = player.inventory
     leather_armor.parent = player.inventory

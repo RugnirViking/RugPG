@@ -2,8 +2,11 @@ from __future__ import annotations
 
 import copy
 import math
-from typing import Optional, Tuple, Type, TypeVar, TYPE_CHECKING, Union
+from typing import Optional, Tuple, Type, TypeVar, TYPE_CHECKING, Union, List
 
+import Entities.Components.status_effects
+from Entities.Components import status_effects, rarities
+from Entities.Components.rarities import Rarity
 from Entities.render_order import RenderOrder
 
 if TYPE_CHECKING:
@@ -132,6 +135,7 @@ class Actor(Entity):
 
         self.level = level
         self.level.parent = self
+        self.status_effects: List[status_effects.StatusEffect] = []
 
     @property
     def is_alive(self) -> bool:
@@ -153,6 +157,7 @@ class Actor(Entity):
 
 
 
+
 class Item(Entity):  # TODO: make this into its own file
     def __init__(
             self,
@@ -164,6 +169,8 @@ class Item(Entity):  # TODO: make this into its own file
             name: str = "<Unnamed>",
             consumable: Optional[Consumable] = None,
             equippable: Optional[Equippable] = None,
+            description: str="",
+            rarity: Rarity=Rarity.COMMON,
     ):
         super().__init__(
             x=x,
@@ -174,7 +181,8 @@ class Item(Entity):  # TODO: make this into its own file
             blocks_movement=False,
             render_order=RenderOrder.ITEM,
         )
-
+        self.description = description
+        self.rarity=rarity
         self.consumable = consumable
 
         if self.consumable:

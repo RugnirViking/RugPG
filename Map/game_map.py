@@ -15,7 +15,7 @@ from Entities import entity_factories
 from Map import tile_types
 from Entities.entity import Actor, Item
 from Map.procgen_cave import generate_cave2
-from Map.procgen_dungeon import generate_dungeon, generate_cave
+from Map.procgen_dungeon import generate_dungeon, generate_cave, generate_temple, generate_barracks
 
 if TYPE_CHECKING:
     from engine import Engine
@@ -84,6 +84,13 @@ class GameMap:
     def get_blocking_entity_at_location(self, location_x: int, location_y: int) -> Optional[Entity]:
         for entity in self.entities:
             if entity.blocks_movement and entity.x == location_x and entity.y == location_y:
+                return entity
+
+        return None
+
+    def get_entity_at_location(self, location_x: int, location_y: int) -> Optional[Entity]:
+        for entity in self.entities:
+            if entity.x == location_x and entity.y == location_y:
                 return entity
 
         return None
@@ -219,16 +226,70 @@ class GameWorld:
         self.room_max_size = room_max_size
 
         self.current_floor = current_floor
+        self.current_floor_type="dungeon"
 
     def generate_floor(self) -> None:
 
         self.current_floor += 1
         random.seed()
-        self.engine.game_map = generate_cave2(
-            map_width=self.map_width,
-            map_height=self.map_height,
-            engine=self.engine,
-        )
+        n=random.random()
+        self.engine.game_map = generate_barracks(
+                max_rooms=self.max_rooms,
+                room_min_size=self.room_min_size,
+                room_max_size=self.room_max_size,
+                map_width=self.map_width,
+                map_height=self.map_height,
+                engine=self.engine,
+            )
+        self.current_floor_type="temple"
+
+        # if n>0.5:
+        #     self.engine.game_map = generate_cave2(
+        #         map_width=self.map_width,
+        #         map_height=self.map_height,
+        #         engine=self.engine,
+        #     )
+        #     current_floor_type="cave"
+        # elif n>0.7:
+        #     self.engine.game_map = generate_barracks(
+        #         max_rooms=self.max_rooms,
+        #         room_min_size=self.room_min_size,
+        #         room_max_size=self.room_max_size,
+        #         map_width=self.map_width,
+        #         map_height=self.map_height,
+        #         engine=self.engine,
+        #     )
+        #     current_floor_type="barracks"
+        # elif n>0.8:
+        #     self.engine.game_map = generate_quarters(
+        #         max_rooms=self.max_rooms,
+        #         room_min_size=self.room_min_size,
+        #         room_max_size=self.room_max_size,
+        #         map_width=self.map_width,
+        #         map_height=self.map_height,
+        #         engine=self.engine,
+        #     )
+        #     current_floor_type="quarters"
+        # elif n>0.9:
+        #     self.engine.game_map = generate_temple(
+        #         max_rooms=self.max_rooms,
+        #         room_min_size=self.room_min_size,
+        #         room_max_size=self.room_max_size,
+        #         map_width=self.map_width,
+        #         map_height=self.map_height,
+        #         engine=self.engine,
+        #     )
+        #     current_floor_type="temple"
+        # else:
+        #     self.engine.game_map = generate_dungeon(
+        #         max_rooms=self.max_rooms,
+        #         room_min_size=self.room_min_size,
+        #         room_max_size=self.room_max_size,
+        #         map_width=self.map_width,
+        #         map_height=self.map_height,
+        #         engine=self.engine,
+        #     )
+        #     current_floor_type="dungeon"
 
     def load_surface(self,filename:str) -> None:
         player = self.engine.player

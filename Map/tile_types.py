@@ -41,6 +41,48 @@ floor = new_tile(
     dark=(ord("+"), (50, 35, 75), (0, 0, 0)),
     light=(ord("+"), (150, 150, 150), (0, 0, 0)),
 )
+cave_floor = new_tile(
+    walkable=True,
+    transparent=True,
+    dark=(ord("\""), (50, 35, 75), (0, 0, 0)),
+    light=(ord("\""), (150, 150, 150), (0, 0, 0)),
+)
+cave_floor2 = new_tile(
+    walkable=True,
+    transparent=True,
+    dark=(ord("\""), (50, 35, 75), (0, 0, 0)),
+    light=(ord("`"), (150, 150, 150), (0, 0, 0)),
+)
+cave_floor3 = new_tile(
+    walkable=True,
+    transparent=True,
+    dark=(ord("\""), (50, 35, 75), (0, 0, 0)),
+    light=(ord("'"), (150, 150, 150), (0, 0, 0)),
+)
+carpet1 = new_tile(
+    walkable=True,
+    transparent=True,
+    dark=(ord("░"), (50, 35, 75), (0, 0, 0)),
+    light=(ord("░"), (0, 0, 0),(150, 100, 100)),
+)
+carpet2 = new_tile(
+    walkable=True,
+    transparent=True,
+    dark=(ord("░"), (50, 35, 75), (0, 0, 0)),
+    light=(ord("░"), (0, 0, 0),(100, 150, 100)),
+)
+carpet3 = new_tile(
+    walkable=True,
+    transparent=True,
+    dark=(ord("░"), (50, 35, 75), (0, 0, 0)),
+    light=(ord("░"), (0, 0, 0),(100, 100, 150)),
+)
+wood_planks = new_tile(
+    walkable=True,
+    transparent=True,
+    dark=(ord("≡"), (50, 35, 75), (0, 0, 0)),
+    light=(ord("≡"), (100, 90, 50),(0,0,0)),
+)
 snow = new_tile(
     walkable=True,
     transparent=True,

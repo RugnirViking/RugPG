@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import random
 from typing import Tuple, TYPE_CHECKING
 
 from UI import color
@@ -22,7 +23,7 @@ def get_names_at_location(x: int, y: int, game_map: GameMap) -> str:
 
 
 def render_bar(
-    console: Console, current_value: int, maximum_value: int, total_width: int
+        console: Console, current_value: int, maximum_value: int, total_width: int
 ) -> None:
     bar_width = int(float(current_value) / maximum_value * total_width)
 
@@ -39,18 +40,37 @@ def render_bar(
 
 
 def render_dungeon_level(
-        console: Console, dungeon_level: int, location: Tuple[int, int]
+        console: Console, dungeon_level: int, location: Tuple[int, int],type:str="dungeon"
 ) -> None:
     """
     Render the level the player is currently on, at the given location.
     """
-    x, y = location
+    if type=="dungeon":
+        x, y = location
+        n=random.random()
 
-    console.print(x=x, y=y, string=f"Dungeon level: {dungeon_level}")
+        console.print(x=x, y=y, string=f"{dungeon_level}: Dungeon Vaults")
+    elif type=="cave":
+        x, y = location
+
+        console.print(x=x, y=y, string=f"{dungeon_level}: Caverns")
+    elif type=="barracks":
+        x, y = location
+
+        console.print(x=x, y=y, string=f"{dungeon_level}: Barracks")
+    elif type=="quarters":
+        x, y = location
+
+        console.print(x=x, y=y, string=f"{dungeon_level}: Quarters")
+    elif type=="temple":
+        x, y = location
+
+        console.print(x=x, y=y, string=f"{dungeon_level}: Temple Complex")
+
 
 
 def render_names_at_mouse_location(
-    console: Console, x: int, y: int, engine: Engine
+        console: Console, x: int, y: int, engine: Engine
 ) -> None:
     mouse_x, mouse_y = engine.mouse_location
 
@@ -59,3 +79,19 @@ def render_names_at_mouse_location(
     )
 
     console.print(x=x, y=y, string=names_at_mouse_location)
+
+
+def render_current_status_effects(
+        console: Console, x: int, y: int, engine: Engine, width:int
+) -> None:
+    effects = engine.player.status_effects
+    n = 0
+    for effect in effects:
+        console.draw_rect(
+            x=x, y=y + n, width=width, height=1, ch=1, bg=effect.bg
+        )
+        if effect.duration==-1:
+            console.print(x=x, y=y + n, string=f" {effect.name} ", fg=effect.fg)
+        else:
+            console.print(x=x, y=y + n, string=f" {effect.name} ({effect.duration})", fg=effect.fg)
+        n = n + 1

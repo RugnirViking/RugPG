@@ -57,6 +57,7 @@ class Fighter(BaseComponent):
             return 0
 
     def die(self) -> None:
+        print("ded")
         if self.engine.player is self.parent:
             death_message = "You died!"
             death_message_color = color.player_die
@@ -88,13 +89,20 @@ class Fighter(BaseComponent):
 
         self.hp = new_hp_value
 
+        for effect in self.parent.status_effects:
+            effect.on_heal(amount_recovered)
+
         return amount_recovered
 
     def take_damage(self, amount: int) -> None:
         self.hp -= amount
 
     def melee_attack(self, damage, entity):
-        self.hp -= damage
+        self.take_damage(damage)
+
+        for effect in self.parent.status_effects:
+            effect.on_damaged(entity,damage)
+
         n=random.random()
         if self.hp<self.max_hp/3 and n>self.will_chance and self.parent.is_alive:
             self.engine.message_log.add_message(

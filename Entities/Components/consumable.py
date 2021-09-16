@@ -151,7 +151,11 @@ class FearConsumable(Consumable):
             color.status_effect_applied,
         )
         target.ai = Entities.Components.ai.FearedEnemy(
-            entity=target, previous_ai=target.ai, turns_remaining=self.number_of_turns,fear_source=consumer,
+            entity=target,
+            previous_ai=target.ai,
+            turns_remaining=self.number_of_turns,
+            fear_source=consumer,
+            is_magical_fear=True
         )
         self.consume()
 

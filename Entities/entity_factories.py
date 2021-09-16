@@ -1,9 +1,10 @@
-from Entities.Components.ai import HostileEnemy, PlayerAI
+from Entities.Components.ai import HostileEnemy, PlayerAI, IceSpellEnemy
 from Entities.Components import consumable, equippable
 from Entities.Components.equipment import Equipment
 from Entities.Components.fighter import Fighter
 from Entities.Components.inventory import Inventory
 from Entities.Components.level import Level
+from Entities.Components.rarities import Rarity
 from Entities.entity import Actor, Item, Entity
 
 #####################
@@ -44,6 +45,26 @@ troll = Actor( # real ugly lookin fellow
     inventory=Inventory(capacity=0),
     level=Level(xp_given=100),
 )
+ice_golem = Actor( # real ugly lookin fellow
+    char="G",
+    color=(0, 156, 226),
+    name="Ice Golem",
+    ai_cls=IceSpellEnemy,
+    equipment=Equipment(),
+    fighter=Fighter(hp=25, base_defense=3, base_power=4, will_chance=1.0),
+    inventory=Inventory(capacity=0),
+    level=Level(xp_given=120),
+)
+mawrat = Actor( # real ugly lookin fellow
+    char="r",
+    color=(226, 156, 156),
+    name="Mawrat",
+    ai_cls=HostileEnemy,
+    equipment=Equipment(),
+    fighter=Fighter(hp=8, base_defense=2, base_power=2, will_chance=1.0),
+    inventory=Inventory(capacity=0),
+    level=Level(xp_given=120),
+)
 
 snowdrift = Entity(
     char="^",
@@ -61,6 +82,24 @@ tree = Entity(
     color=(50, 150, 50),
     name="A hardy evergreen tree",
     blocks_movement=True
+)
+cave_plant = Entity(
+    char=":",
+    color=(100, 150, 120),
+    name="Cave Moss",
+    blocks_movement=False
+)
+cave_plant2 = Entity(
+    char="¥",
+    color=(150, 100, 100),
+    name="Bloodthistle Lichen",
+    blocks_movement=False
+)
+cave_plant3 = Entity(
+    char="*",
+    color=(100, 120, 180),
+    name="Brewspout Mushroom",
+    blocks_movement=False
 )
 
 table = Entity(
@@ -84,6 +123,13 @@ barrel = Entity(
     blocks_movement=False,
     render_order=RenderOrder.FURNITURE
 )
+shelf = Entity(
+    char="o",
+    color=(150, 130, 50),
+    name="A barrel of foul-smelling liquid",
+    blocks_movement=False,
+    render_order=RenderOrder.FURNITURE
+)
 chair = Entity(
     char="h",
     color=(70, 50, 0),
@@ -91,7 +137,7 @@ chair = Entity(
     blocks_movement=False,
     render_order=RenderOrder.FURNITURE
 )
-torch = Entity(
+brazier = Entity(
     char="δ",
     color=(150, 110, 50),
     name="A flickering brazier",
@@ -99,6 +145,61 @@ torch = Entity(
     render_order=RenderOrder.FURNITURE,
     emits_light=True,
     light_level=10,
+)
+torch = Entity(
+    char="ƒ",
+    color=(150, 110, 50),
+    name="A flickering torch",
+    blocks_movement=False,
+    render_order=RenderOrder.FURNITURE,
+    emits_light=True,
+    light_level=10,
+)
+candles = Entity(
+    char="╜",
+    color=(150, 150, 150),
+    name="A collection of candles",
+    blocks_movement=False,
+    render_order=RenderOrder.FURNITURE,
+    emits_light=True,
+    light_level=10,
+)
+candles2 = Entity(
+    char="╙",
+    color=(150, 150, 150),
+    name="A collection of candles",
+    blocks_movement=False,
+    render_order=RenderOrder.FURNITURE,
+    emits_light=True,
+    light_level=10,
+)
+bed = Entity(
+    char="Θ",
+    color=(150, 130, 50),
+    name="A wooden bed",
+    blocks_movement=False,
+    render_order=RenderOrder.FURNITURE,
+)
+wardrobe = Entity(
+    char="∩",
+    color=(150, 130, 50),
+    name="A wooden wardrobe",
+    blocks_movement=False,
+    render_order=RenderOrder.FURNITURE,
+)
+cabinet = Entity(
+    char="π",
+    color=(150, 130, 50),
+    name="A wooden cabinet",
+    blocks_movement=False,
+    render_order=RenderOrder.FURNITURE,
+)
+lectern = Entity(
+    char="τ",
+    color=(150, 130, 50),
+    name="A wooden lectern",
+    blocks_movement=False,
+    render_order=RenderOrder.FURNITURE,
 )
 
 ###########################
@@ -109,36 +210,69 @@ health_potion = Item(
     color=(227, 127, 255),
     name="Health Potion",
     consumable=consumable.HealingConsumable(amount=4),
+    rarity=Rarity.COMMON,
+    description="A vial of a red liquid - a healing potion. It heals 4 hitpoints when used. "
+                "Doesn't smell great and tastes sickly sweet"
 )
 lightning_scroll = Item(
     char="~",
     color=(255, 255, 0),
     name="Scroll of Thunderclap",
     consumable=consumable.LightningDamageConsumable(damage=20, maximum_range=5),
+    rarity=Rarity.COMMON,
+    description="A scroll of Thunderclap. When used, strikes the nearest enemy with the force of a lightning strike. "
+                "Magical scrolls are rolls of parchment with glyphs inset onto them, allowing an untrained user to "
+                "activate it by reading aloud the activation phrase written on it. After use, the glyph fades, "
+                "its power depleted"
 )
 confusion_scroll = Item(
     char="~",
     color=(207, 63, 255),
     name="Scroll of Lesser Confusion",
     consumable=consumable.ConfusionConsumable(number_of_turns=10),
+    rarity=Rarity.COMMON,
+    description="A scroll of Lesser Confusion. The user selects a target creature, and is able to scramble its "
+                "thoughts, causing it to forget where it is and what it is doing. "
+                "Magical scrolls are rolls of parchment with glyphs inset onto them, allowing an untrained user to "
+                "activate it by reading aloud the activation phrase written on it. After use, the glyph fades, "
+                "its power depleted"
 )
 fireball_scroll = Item(
     char="~",
     color=(255, 75, 0),
     name="Scroll of Fireball",
     consumable=consumable.FireballDamageConsumable(damage=12, radius=3),
+    rarity=Rarity.UNCOMMON,
+    description="A scroll of Fireball. The classic. The user activates its glyph and points at a target area, and "
+                "everything within distance is engulfed in flame."
+                "Magical scrolls are rolls of parchment with glyphs inset onto them, allowing an untrained user to "
+                "activate it by reading aloud the activation phrase written on it. After use, the glyph fades, "
+                "its power depleted"
 )
 fear_scroll = Item(
     char="~",
     color=(115, 115, 235),
     name="Scroll of Lesser Terror",
     consumable=consumable.FearConsumable(number_of_turns=10),
+    rarity=Rarity.COMMON,
+    description="A scroll of Lesser Terror. The user selects a target creature, and it runs in mortal fear from "
+                "the caster, going so far as to attack anything that gets in its way so it can get further from the "
+                "source of its fear."
+                "Magical scrolls are rolls of parchment with glyphs inset onto them, allowing an untrained user to "
+                "activate it by reading aloud the activation phrase written on it. After use, the glyph fades, "
+                "its power depleted"
 )
 charm_scroll = Item(
     char="~",
     color=(135, 235, 75),
     name="Scroll of Lesser Mind Control",
     consumable=consumable.CharmConsumable(number_of_turns=10),
+    rarity=Rarity.UNCOMMON,
+    description="A scroll of Lesser Mind Control. The user selects a target creature, and is able to scramble its "
+                "thoughts, causing it to forget where it is and what it is doing. "
+                "Magical scrolls are rolls of parchment with glyphs inset onto them, allowing an untrained user to "
+                "activate it by reading aloud the activation phrase written on it. After use, the glyph fades, "
+                "its power depleted"
 )
 
 
@@ -146,11 +280,25 @@ charm_scroll = Item(
 #       Equipment       #
 #########################
 dagger = Item(
-    char="/", color=(0, 191, 255), name="Dagger", equippable=equippable.Dagger()
+    char="/",
+    color=(0, 191, 255),
+    name="Dagger",
+    equippable=equippable.Dagger(),
+    rarity=Rarity.COMMON,
+    description="This is a dagger given to you by your father before he went to serve in the duke's armies. "
+                "Some time ago you crudely carved your initials on the handle. It's a nice memento, and thanks to"
+                "several run-ins with wolves in the forest you know how to use it, too."
 )
 
 sword = Item(
-    char="/", color=(0, 191, 255), name="Sword", equippable=equippable.Sword()
+    char="/",
+    color=(0, 191, 255),
+    name="Sword",
+    equippable=equippable.Sword(),
+    rarity=Rarity.COMMON,
+    description="This is a fine sword of the type used by soldiers of the duke. You're not quite sure how it got all "
+                "the way down here - perhaps it was dropped by the last unlucky soul to try adventuring around here. "
+                "Still, its a good weapon, and longer than a dagger"
 )
 
 leather_armor = Item(
@@ -158,8 +306,39 @@ leather_armor = Item(
     color=(139, 69, 19),
     name="Leather Armor",
     equippable=equippable.LeatherArmor(),
+    rarity=Rarity.COMMON,
+    description="A leather tunic and some wits has saved many a person's life, and yours is no exception. With those "
+                "two bite marks from, that time you were cornered by a mean looking boar it's somewhat "
+                "worse for wear, but its the best you've got"
+)
+chain_mail = Item(
+    char="[",
+    color=(139, 69, 19),
+    name="Chain Mail",
+    equippable=equippable.ChainMail(),
+    rarity=Rarity.COMMON,
+    description="A suit of rusted chain mail. You had always wanted one of these after you saw a travelling merchant "
+                "roll into town with a gleaming suit of chain-link armour. It provides good protection from blows "
+                "but requires taking care of with oil to keep it from rusting, which the previous owner apparently "
+                "didn't know."
+)
+scale_mail = Item(
+    char="[",
+    color=(139, 69, 19),
+    name="Chain Mail",
+    equippable=equippable.ScaleMail(),
+    rarity=Rarity.UNCOMMON,
+    description="An unusual suit of armour made from small interlocking metal plates. The links are somewhat "
+                "vulnerable to flying apart when hit particularly hard. You think it makes you look like a fish."
+)
+red_shroud = Item(
+    char="[",
+    color=(139, 69, 19),
+    name="Red Shroud",
+    equippable=equippable.RedShroud(),
+    rarity=Rarity.RARE,
+    description="An unsettling red shroud with a rough picture of a face burned into it. "
+                "Who made this horrible thing, and why? Holding it you can tell its made well, but there's something "
+                "that tells you it is not a good idea to wear for too long"
 )
 
-chain_mail = Item(
-    char="[", color=(139, 69, 19), name="Chain Mail", equippable=equippable.ChainMail()
-)

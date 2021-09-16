@@ -20,10 +20,12 @@ error = (0xFF, 0x40, 0x40)
 
 welcome_text = (0x20, 0xA0, 0xFF)
 health_recovered = (0x0, 0xFF, 0x0)
+health_recovered_effect = (0x0, 0xCF, 0x0)
 
 bar_text = white
 bar_filled = (0x0, 0x60, 0x0)
 bar_empty = (0x40, 0x10, 0x10)
+item_description = (0xA0, 0xA0, 0xA0)
 equipped = (0x8F, 0x8F, 0xCF)
 
 menu_title = (255, 255, 63)
@@ -31,3 +33,10 @@ menu_text = white
 
 options_control = (100, 150, 100)
 options_control_selected = (200, 255, 200)
+
+item_junk=(150, 150, 150)
+item_common=(255, 255, 255)
+item_uncommon=(150, 255, 150)
+item_rare=(0, 200, 255)
+item_epic=(205, 150, 255)
+item_legendary=(255, 205, 150)

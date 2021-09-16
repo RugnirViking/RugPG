@@ -9,6 +9,7 @@ import tcod.event
 
 import actions
 from Entities import entity
+from Entities.Components.rarities import Rarity, item_color
 from UI import color
 from actions import (
     Action,
@@ -215,6 +216,8 @@ class MainGameEventHandler(EventHandler):
             return HistoryViewer(self.engine)
         elif key == tcod.event.K_g:
             action = PickupAction(player)
+        elif key == tcod.event.K_i and modifier & (tcod.event.KMOD_LSHIFT | tcod.event.KMOD_RSHIFT):
+            return InventoryInspectHandler(self.engine)
         elif key == tcod.event.K_i:
             return InventoryActivateHandler(self.engine)
         elif key == tcod.event.K_p:
@@ -397,7 +400,7 @@ class CharacterScreenEventHandler(AskUserEventHandler):
             x=x,
             y=y,
             width=width,
-            height=7,
+            height=15,
             title=self.TITLE,
             clear=True,
             fg=(255, 255, 255),
@@ -422,6 +425,33 @@ class CharacterScreenEventHandler(AskUserEventHandler):
         console.print(
             x=x + 1, y=y + 5, string=f"Defense: {self.engine.player.fighter.defense}"
         )
+
+        console.print(
+            x=x + 1, y=y + 7, string=f"Equipment: "
+        )
+        n = 8
+        if self.engine.player.equipment.weapon:
+            console.print(
+                x=x + 2, y=y + n, string=f"Right Hand: {self.engine.player.equipment.weapon.name}"
+            )
+            n += 1
+        console.print(
+            x=x + 2, y=y + n, string=f"Left Hand: "
+        )
+        console.print(
+            x=x + 13, y=y + n, string=f"Torch", fg=color.red
+        )
+        n += 1
+        if self.engine.player.equipment.armor:
+            console.print(
+                x=x + 2, y=y + n, string=f"Armour: {self.engine.player.equipment.armor.name}"
+            )
+            n += 1
+        if self.engine.player.equipment.ring:
+            console.print(
+                x=x + 2, y=y + n, string=f"Ring: {self.engine.player.equipment.ring.name}"
+            )
+            n += 1
 
 
 class LevelUpEventHandler(AskUserEventHandler):
@@ -733,13 +763,16 @@ class InventoryEventHandler(AskUserEventHandler):
 
                 is_equipped = self.engine.player.equipment.item_is_equipped(item)
 
-                item_string = f"({item_key}) {item.name}"
+                item_string = f"{item.name}"
 
+                col = item_color(item.rarity)
                 if is_equipped:
                     item_string = f"{item_string} (E)"
-                    console.print(x + 1, y + i + 1, item_string, color.equipped)
+                    console.print(x+1,y+i+1,f"({item_key}) ",col)
+                    console.print(x + 5, y + i + 1, item_string, color.equipped)
                 else:
-                    console.print(x + 1, y + i + 1, item_string)
+                    console.print(x+1,y+i+1,f"({item_key}) ",col)
+                    console.print(x + 5, y + i + 1, item_string, fg=color.white)
         else:
             console.print(x + 1, y + 1, "(Empty)")
 
@@ -777,6 +810,77 @@ class InventoryActivateHandler(InventoryEventHandler):
             return None
 
 
+class ItemInspectHandler(AskUserEventHandler):
+    def __init__(self, engine: Engine, item: Item):
+        super().__init__(engine)
+        self.item = item
+        self.TITLE = self.item.name.upper()
+
+    def wrap(self, string: str, width: int) -> Iterable[str]:
+        """Return a wrapped text message."""
+        for line in string.splitlines():  # Handle newlines in messages.
+            yield from textwrap.wrap(
+                line, width, expand_tabs=True,
+            )
+
+    def on_render(self, console: tcod.Console) -> None:
+        super().on_render(console)
+
+        log_console = tcod.Console(console.width - 6, console.height - 6)
+
+        # Draw a frame with a custom banner title.
+        log_console.draw_frame(0, 0, log_console.width, log_console.height)
+        log_console.print_box(
+            0, 0, log_console.width, 1, f"┤{self.TITLE}├", alignment=tcod.CENTER
+        )
+
+        y_offset = log_console.height // 8
+        col = item_color(self.item.rarity)
+        rarity_name = "a"
+        if self.item.rarity == Rarity.UNCOMMON:
+            rarity_name = "an uncommon"
+            col = color.item_uncommon
+        elif self.item.rarity == Rarity.RARE:
+            rarity_name = "a rare"
+            col = color.item_rare
+        elif self.item.rarity == Rarity.EPIC:
+            rarity_name = "an epic"
+            col = color.item_epic
+        elif self.item.rarity == Rarity.LEGENDARY:
+            rarity_name = "the legendary"
+            col = color.item_legendary
+        elif self.item.rarity == Rarity.COMMON:
+            col = color.item_common
+        elif self.item.rarity == Rarity.JUNK:
+            col = color.item_junk
+        line = f"This is {rarity_name} {self.item.name}"
+        log_console.print(x=5, y=1 + y_offset, string=line, fg=col)
+        log_console.print(x=log_console.width // 2, y=2 + y_offset, string="Properties:", fg=col, alignment=tcod.CENTER)
+        n = 0
+        if self.item.equippable:
+            log_console.print(x=5, y=3 + n + y_offset, string="Equippable", fg=color.item_description)
+            n += 1
+        if self.item.consumable:
+            log_console.print(x=5, y=3 + n + y_offset, string="Consumable", fg=color.item_description)
+            n += 1
+
+        log_console.print(x=log_console.width // 2, y=4 + n + y_offset, string="Description:", fg=col,
+                          alignment=tcod.CENTER)
+        for line in list(self.wrap(self.item.description, 60)):
+            log_console.print(x=5, y=5 + n + y_offset, string=line, fg=color.item_description)
+            n += 1
+        log_console.blit(console, 3, 3)
+
+
+class InventoryInspectHandler(InventoryEventHandler):
+    """Handle inspecting an inventory item."""
+
+    TITLE = "Select an item to use"
+
+    def on_item_selected(self, item: Item) -> Optional[ActionOrHandler]:
+        return ItemInspectHandler(self.engine, item)
+
+
 class InventoryDropHandler(InventoryEventHandler):
     """Handle dropping an inventory item."""
 
@@ -804,7 +908,7 @@ class OptionsMenuHandler(BaseEventHandler):
                      "Music Volume",
                      "Sound Effects Volume",
                      "Allow Debug Commands",
-        ]
+                     ]
 
     def on_render(self, console: tcod.Console) -> None:
         console.tiles_rgb["fg"] //= 8

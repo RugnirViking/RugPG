@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Optional, Tuple, TYPE_CHECKING
 
+from Entities.Components.status_effects import StatusEffect, FrostShockStatus
 from UI import color
 import exceptions
 
@@ -156,11 +157,11 @@ class MeleeAction(ActionWithDirection):
         target = self.target_actor
         if not target:
             raise exceptions.Impossible("Nothing to attack.")
-        damage=0
-        if target.melee_neighbors()>3:
+        damage = 0
+        if target.melee_neighbors() > 3:
             damage = self.entity.fighter.power
-        elif target.melee_neighbors()>1:
-            damage = self.entity.fighter.power - target.fighter.defense/2
+        elif target.melee_neighbors() > 1:
+            damage = self.entity.fighter.power - target.fighter.defense / 2
         else:
             damage = self.entity.fighter.power - target.fighter.defense
 
@@ -179,11 +180,13 @@ class MeleeAction(ActionWithDirection):
             self.engine.message_log.add_message(
                 f"{attack_desc} for {int(damage)} hit points.", attack_color
             )
-            target.fighter.melee_attack(int(damage),self.entity)
+            target.fighter.melee_attack(int(damage), self.entity)
         else:
             self.engine.message_log.add_message(
                 f"{attack_desc} but does no damage.", attack_color
             )
+        for effect in self.entity.status_effects:
+            effect.on_deal_damage(target,int(damage))
 
 
 class MovementAction(ActionWithDirection):
@@ -211,10 +214,46 @@ class BumpAction(ActionWithDirection):
 
     def perform(self) -> None:
         if self.target_actor and self.target_actor.is_alive:
-            print(self.target_actor.is_alive,self.target_actor.name,self.entity.name)
             return MeleeAction(self.entity, self.dx, self.dy).perform()
         else:
             return MovementAction(self.entity, self.dx, self.dy).perform()
+
+
+class FreezeSpellAction(ActionWithDirection):
+
+    def perform(self) -> None:
+        target = self.target_actor
+        if not target and self.entity.name == "Player":
+            raise exceptions.Impossible("Nothing to attack.")
+
+        damage = 6 - target.fighter.defense
+
+        attack_desc = ""
+        target_desc = ""
+        if (target.name == "Player"):
+            attack_desc = f"{self.entity.name.capitalize()} casts Frost Shock at you"
+            target_desc = "you"
+        else:
+            attack_desc = f"{self.entity.name.capitalize()} attacks the {target.name.capitalize()}"
+            target_desc = f"the {target.name.capitalize()}"
+
+        if self.entity is self.engine.player:
+            attack_color = color.player_atk
+        else:
+            attack_color = color.enemy_atk
+
+        if damage > 0:
+            self.engine.message_log.add_message(
+                f"{attack_desc} for {int(damage)} hit points and freezing {target_desc}, slowing your reactions.",
+                attack_color
+            )
+            target.fighter.take_damage(int(damage))
+            target.status_effects.append(FrostShockStatus("Frost Shock", 1, target, 10))
+        else:
+            self.engine.message_log.add_message(
+                f"{attack_desc} but does no damage.", attack_color
+            )
+            target.status_effects.append(FrostShockStatus("Frost Shock", 1, target, 5))
 
 
 class TeleportAction(Action):
@@ -233,6 +272,6 @@ class TeleportAction(Action):
 
     def perform(self) -> None:
         """Invoke the items ability, this action will be given to provide context."""
-        self.entity.x=self.target_xy[0]
-        self.entity.x=self.target_xy[1]
+        self.entity.x = self.target_xy[0]
+        self.entity.x = self.target_xy[1]
         self.entity.place(self.target_xy[0], self.target_xy[1], self.entity.gamemap)

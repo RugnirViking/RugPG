@@ -10,6 +10,7 @@ from typing import Dict, Iterator, List, Tuple, TYPE_CHECKING
 import tcod
 import cProfile
 import time
+
 if TYPE_CHECKING:
     from engine import Engine
     from Entities.entity import Entity
@@ -36,13 +37,16 @@ item_chances: Dict[int, List[Tuple[Entity, int]]] = {
     5: [(entity_factories.fear_scroll, 25)],
     6: [(entity_factories.fireball_scroll, 25), (entity_factories.chain_mail, 15)],
     7: [(entity_factories.charm_scroll, 20)],
+    8: [(entity_factories.charm_scroll, 20, (entity_factories.scale_mail, 15), (entity_factories.red_shroud, 15))],
 }
 
 enemy_chances: Dict[int, List[Tuple[Entity, int]]] = {
     0: [(entity_factories.orc, 80)],
     3: [(entity_factories.troll, 15)],
     5: [(entity_factories.troll, 30)],
+    6: [(entity_factories.ice_golem, 10)],
     7: [(entity_factories.troll, 60)],
+    9: [(entity_factories.ice_golem, 60)],
 }
 
 
@@ -105,6 +109,11 @@ class RectangularRoom:
     def inner(self) -> Tuple[slice, slice]:
         """Return the inner area of this room as a 2D array index."""
         return slice(self.x1 + 1, self.x2), slice(self.y1 + 1, self.y2)
+
+    @property
+    def inner2(self) -> Tuple[slice, slice]:
+        """Return the inner area of this room as a 2D array index."""
+        return slice(self.x1 + 2, self.x2 - 1), slice(self.y1 + 2, self.y2 - 1)
 
     def intersects(self, other: RectangularRoom) -> bool:
         """Return True if this room overlaps with another RectangularRoom."""
@@ -198,20 +207,354 @@ def generate_dungeon(
         else:  # All rooms after the first.
             # Dig out a tunnel between this room and the previous one.
             for x, y in tunnel_between(rooms[-1].center, new_room.center):
-                dungeon.tiles[x, y] = tile_types.floor
+                if not dungeon.tiles[x, y].walkable:
+                    dungeon.tiles[x, y] = tile_types.floor
 
             center_of_last_room = new_room.center
+            dungeon.tiles[center_of_last_room] = tile_types.down_stairs
+            dungeon.downstairs_location = center_of_last_room
 
         place_entities(new_room, dungeon, engine.game_world.current_floor)
-
-        dungeon.tiles[center_of_last_room] = tile_types.down_stairs
-        dungeon.downstairs_location = center_of_last_room
 
         # Finally, append the new room to the list.
         rooms.append(new_room)
 
     return dungeon
 
+
+def generate_temple(
+        max_rooms: int,
+        room_min_size: int,
+        room_max_size: int,
+        map_width: int,
+        map_height: int,
+        engine: Engine,
+) -> game_map.GameMap:
+    """Generate a new temple map."""
+    player = engine.player
+    dungeon = game_map.GameMap(engine, map_width, map_height, entities=[player])
+
+    rooms: List[RectangularRoom] = []
+    center_of_last_room = (0, 0)
+
+    for r in range(max_rooms):
+        room_width = random.randint(room_min_size, room_max_size)
+        room_height = random.randint(room_min_size, room_max_size)
+
+        x = random.randint(0, dungeon.width - room_width - 1)
+        y = random.randint(0, dungeon.height - room_height - 1)
+
+        # "RectangularRoom" class makes rectangles easier to work with
+        new_room = RectangularRoom(x, y, room_width, room_height)
+
+        # Run through the other rooms and see if they intersect with this one.
+        if any(new_room.intersects(other_room) for other_room in rooms):
+            continue  # This room intersects, so go to the next attempt.
+        # If there are no intersections then the room is valid.
+
+        # Dig out this rooms inner area.
+        dungeon.tiles[new_room.inner] = tile_types.floor
+
+        if len(rooms) == 0:
+            # The first room, where the player starts.
+            player.place(*new_room.center, dungeon)
+        else:  # All rooms after the first.
+            # Dig out a tunnel between this room and the previous one.
+            for x, y in tunnel_between(rooms[-1].center, new_room.center):
+                if not dungeon.tiles[x, y][0]:
+                    dungeon.tiles[x, y] = tile_types.floor
+
+            center_of_last_room = new_room.center
+
+        place_entities(new_room, dungeon, engine.game_world.current_floor)
+
+        # Add some temple-themed decoration
+        n = random.random()
+        if n < 0.15:
+            # circle of candles
+            for x, y in [[-2, -1], [-1, -2], [1, -2], [2, -1], [1, 2], [2, 1], [-1, 2], [-2, 1]]:
+                n2 = random.random()
+                if n2 > 0.5:
+                    entity_factories.candles2.spawn(dungeon, x + new_room.center[0], y + new_room.center[1])
+                else:
+                    entity_factories.candles.spawn(dungeon, x + new_room.center[0], y + new_room.center[1])
+
+        elif n < 0.3:
+            # carpet3 + statues at each corner
+            dungeon.tiles[new_room.inner2] = tile_types.carpet3
+            if not dungeon.get_entity_at_location(new_room.x1 + 1, new_room.y1 + 1) and \
+                    random.random() > 0.1: entity_factories.statue.spawn(dungeon, new_room.x1 + 1, new_room.y1 + 1)
+            if not dungeon.get_entity_at_location(new_room.x1 + 1, new_room.y2 - 1) and \
+                    random.random() > 0.1: entity_factories.statue.spawn(dungeon, new_room.x1 + 1, new_room.y2 - 1)
+            if not dungeon.get_entity_at_location(new_room.x2 - 1, new_room.y1 + 1) and \
+                    random.random() > 0.1: entity_factories.statue.spawn(dungeon, new_room.x2 - 1, new_room.y1 + 1)
+            if not dungeon.get_entity_at_location(new_room.x2 - 1, new_room.y2 - 1) and \
+                    random.random() > 0.1: entity_factories.statue.spawn(dungeon, new_room.x2 - 1, new_room.y2 - 1)
+        elif n < 0.45:
+            n = random.randrange(0, 4)
+            for x3 in range(new_room.x1+2,new_room.x2-1):
+                for y3 in range(new_room.y1+2,new_room.y2-1):
+                    if n==0 or n==3:
+                        if x3%2==0:entity_factories.statue.spawn(dungeon, x3, y3)
+                    else:
+                        if y3%2==0:entity_factories.statue.spawn(dungeon, x3, y3)
+        elif n < 0.6:
+            # carpet1
+            dungeon.tiles[new_room.inner2] = tile_types.carpet1
+            if not dungeon.get_entity_at_location(new_room.x1 + 1, new_room.y1 + 1) and \
+                    random.random() > 0.1: entity_factories.torch.spawn(dungeon, new_room.x1 + 1, new_room.y1 + 1)
+            if not dungeon.get_entity_at_location(new_room.x1 + 1, new_room.y2 - 1) and \
+                    random.random() > 0.1: entity_factories.torch.spawn(dungeon, new_room.x1 + 1, new_room.y2 - 1)
+            if not dungeon.get_entity_at_location(new_room.x2 - 1, new_room.y1 + 1) and \
+                    random.random() > 0.1: entity_factories.torch.spawn(dungeon, new_room.x2 - 1, new_room.y1 + 1)
+            if not dungeon.get_entity_at_location(new_room.x2 - 1, new_room.y2 - 1) and \
+                    random.random() > 0.1: entity_factories.torch.spawn(dungeon, new_room.x2 - 1, new_room.y2 - 1)
+
+        elif n < 0.75:
+            # carpet2
+            dungeon.tiles[new_room.inner2] = tile_types.carpet2
+            if not dungeon.get_entity_at_location(new_room.x1 + 1, new_room.y1 + 1) and \
+                    random.random() > 0.1: entity_factories.torch.spawn(dungeon, new_room.x1 + 1, new_room.y1 + 1)
+            if not dungeon.get_entity_at_location(new_room.x1 + 1, new_room.y2 - 1) and \
+                    random.random() > 0.1: entity_factories.torch.spawn(dungeon, new_room.x1 + 1, new_room.y2 - 1)
+            if not dungeon.get_entity_at_location(new_room.x2 - 1, new_room.y1 + 1) and \
+                    random.random() > 0.1: entity_factories.torch.spawn(dungeon, new_room.x2 - 1, new_room.y1 + 1)
+            if not dungeon.get_entity_at_location(new_room.x2 - 1, new_room.y2 - 1) and \
+                    random.random() > 0.1: entity_factories.torch.spawn(dungeon, new_room.x2 - 1, new_room.y2 - 1)
+
+        elif n < 0.9:
+            # carpet pattern
+            dungeon.tiles[new_room.inner2] = tile_types.wood_planks
+            if not dungeon.get_entity_at_location(new_room.x1 + 1, new_room.y1 + 1) and \
+                    random.random() > 0.1: entity_factories.torch.spawn(dungeon, new_room.x1 + 1, new_room.y1 + 1)
+            if not dungeon.get_entity_at_location(new_room.x1 + 1, new_room.y2 - 1) and \
+                    random.random() > 0.1: entity_factories.torch.spawn(dungeon, new_room.x1 + 1, new_room.y2 - 1)
+            if not dungeon.get_entity_at_location(new_room.x2 - 1, new_room.y1 + 1) and \
+                    random.random() > 0.1: entity_factories.torch.spawn(dungeon, new_room.x2 - 1, new_room.y1 + 1)
+            if not dungeon.get_entity_at_location(new_room.x2 - 1, new_room.y2 - 1) and \
+                    random.random() > 0.1: entity_factories.torch.spawn(dungeon, new_room.x2 - 1, new_room.y2 - 1)
+            n = random.randrange(0,4)
+            if n==0:
+                entity_factories.lectern.spawn(dungeon, new_room.x1 + 1, new_room.center[1])
+            elif n==1:
+                entity_factories.lectern.spawn(dungeon, new_room.center[0], new_room.y1 + 1)
+            elif n==2:
+                entity_factories.lectern.spawn(dungeon, new_room.center[0], new_room.y2 - 1)
+            else:
+                entity_factories.lectern.spawn(dungeon, new_room.x2 - 1, new_room.center[1])
+
+            for x3 in range(new_room.x1+2,new_room.x2-1):
+                for y3 in range(new_room.y1+2,new_room.y2-1):
+                    if n==0 or n==3:
+                        if x3%2==0:entity_factories.chair.spawn(dungeon, x3, y3)
+                    else:
+                        if y3%2==0:entity_factories.chair.spawn(dungeon, x3, y3)
+            pass
+        else:
+            # chairs and lectern
+            n = random.randrange(0,4)
+            if n==0:
+                entity_factories.lectern.spawn(dungeon, new_room.x1 + 1, new_room.center[1])
+            elif n==1:
+                entity_factories.lectern.spawn(dungeon, new_room.center[0], new_room.y1 + 1)
+            elif n==2:
+                entity_factories.lectern.spawn(dungeon, new_room.center[0], new_room.y2 - 1)
+            else:
+                entity_factories.lectern.spawn(dungeon, new_room.x2 - 1, new_room.center[1])
+
+            for x3 in range(new_room.x1+2,new_room.x2-1):
+                for y3 in range(new_room.y1+2,new_room.y2-1):
+                    if n==0 or n==3:
+                        if x3%2==0:entity_factories.chair.spawn(dungeon, x3, y3)
+                    else:
+                        if y3%2==0:entity_factories.chair.spawn(dungeon, x3, y3)
+
+
+        # Finally, append the new room to the list.
+        rooms.append(new_room)
+    dungeon.tiles[center_of_last_room] = tile_types.down_stairs
+    dungeon.downstairs_location = center_of_last_room
+
+    return dungeon
+def generate_barracks(
+        max_rooms: int,
+        room_min_size: int,
+        room_max_size: int,
+        map_width: int,
+        map_height: int,
+        engine: Engine,
+) -> game_map.GameMap:
+    """Generate a new temple map."""
+    player = engine.player
+    dungeon = game_map.GameMap(engine, map_width, map_height, entities=[player])
+
+    rooms: List[RectangularRoom] = []
+    center_of_last_room = (0, 0)
+
+    for r in range(max_rooms):
+        room_width = random.randint(room_min_size, room_max_size)
+        room_height = random.randint(room_min_size, room_max_size)
+
+        x = random.randint(0, dungeon.width - room_width - 1)
+        y = random.randint(0, dungeon.height - room_height - 1)
+
+        # "RectangularRoom" class makes rectangles easier to work with
+        new_room = RectangularRoom(x, y, room_width, room_height)
+
+        # Run through the other rooms and see if they intersect with this one.
+        if any(new_room.intersects(other_room) for other_room in rooms):
+            continue  # This room intersects, so go to the next attempt.
+        # If there are no intersections then the room is valid.
+
+        # Dig out this rooms inner area.
+        dungeon.tiles[new_room.inner] = tile_types.floor
+
+        if len(rooms) == 0:
+            # The first room, where the player starts.
+            player.place(*new_room.center, dungeon)
+        else:  # All rooms after the first.
+            # Dig out a tunnel between this room and the previous one.
+            for x, y in tunnel_between(rooms[-1].center, new_room.center):
+                if not dungeon.tiles[x, y][0]:
+                    dungeon.tiles[x, y] = tile_types.floor
+
+            center_of_last_room = new_room.center
+
+        place_entities(new_room, dungeon, engine.game_world.current_floor)
+
+        # Add some temple-themed decoration
+        n = random.random()
+        if n < 0.15:
+            # circle of candles
+            for x, y in [[-2, -1], [-1, -2], [1, -2], [2, -1], [1, 2], [2, 1], [-1, 2], [-2, 1]]:
+                n2 = random.random()
+                if n2 > 0.5:
+                    entity_factories.chair.spawn(dungeon, x + new_room.center[0], y + new_room.center[1])
+                else:
+                    entity_factories.chair.spawn(dungeon, x + new_room.center[0], y + new_room.center[1])
+
+            for x, y in [[-1, -1], [-1, 0], [1, -1], [1, 0], [1, 1], [0, 1], [0, 1], [-1, 1]]:
+                n2 = random.random()
+                if n2 > 0.5:
+                    entity_factories.table.spawn(dungeon, x + new_room.center[0], y + new_room.center[1])
+                else:
+                    entity_factories.table.spawn(dungeon, x + new_room.center[0], y + new_room.center[1])
+        elif n < 0.3:
+            # carpet3 + statues at each corner
+            dungeon.tiles[new_room.inner] = tile_types.wood_planks
+            if not dungeon.get_entity_at_location(new_room.x1 + 1, new_room.y1 + 1) and \
+                    random.random() > 0.1: entity_factories.statue.spawn(dungeon, new_room.x1 + 1, new_room.y1 + 1)
+            if not dungeon.get_entity_at_location(new_room.x1 + 1, new_room.y2 - 1) and \
+                    random.random() > 0.1: entity_factories.statue.spawn(dungeon, new_room.x1 + 1, new_room.y2 - 1)
+            if not dungeon.get_entity_at_location(new_room.x2 - 1, new_room.y1 + 1) and \
+                    random.random() > 0.1: entity_factories.statue.spawn(dungeon, new_room.x2 - 1, new_room.y1 + 1)
+            if not dungeon.get_entity_at_location(new_room.x2 - 1, new_room.y2 - 1) and \
+                    random.random() > 0.1: entity_factories.statue.spawn(dungeon, new_room.x2 - 1, new_room.y2 - 1)
+        elif n < 0.45:
+            n = random.randrange(0, 4)
+            for x3 in range(new_room.x1+2,new_room.x2-1):
+                for y3 in range(new_room.y1+2,new_room.y2-1):
+                    if n==0 or n==3:
+                        if x3%2==0:
+                            if y3%2==0:
+                                entity_factories.bed.spawn(dungeon, x3, y3)
+                            else:
+                                entity_factories.cabinet.spawn(dungeon, x3, y3)
+
+                    else:
+                        if y3%2==0:
+                            if x3%2==0:
+                                entity_factories.bed.spawn(dungeon, x3, y3)
+                            else:
+                                entity_factories.cabinet.spawn(dungeon, x3, y3)
+        elif n < 0.6:
+            # carpet1
+            dungeon.tiles[new_room.inner] = tile_types.wood_planks
+            if not dungeon.get_entity_at_location(new_room.x1 + 1, new_room.y1 + 1) and \
+                    random.random() > 0.1: entity_factories.torch.spawn(dungeon, new_room.x1 + 1, new_room.y1 + 1)
+            if not dungeon.get_entity_at_location(new_room.x1 + 1, new_room.y2 - 1) and \
+                    random.random() > 0.1: entity_factories.torch.spawn(dungeon, new_room.x1 + 1, new_room.y2 - 1)
+            if not dungeon.get_entity_at_location(new_room.x2 - 1, new_room.y1 + 1) and \
+                    random.random() > 0.1: entity_factories.torch.spawn(dungeon, new_room.x2 - 1, new_room.y1 + 1)
+            if not dungeon.get_entity_at_location(new_room.x2 - 1, new_room.y2 - 1) and \
+                    random.random() > 0.1: entity_factories.torch.spawn(dungeon, new_room.x2 - 1, new_room.y2 - 1)
+
+        elif n < 0.75:
+            # carpet2
+            dungeon.tiles[new_room.inner] = tile_types.wood_planks
+            if not dungeon.get_entity_at_location(new_room.x1 + 1, new_room.y1 + 1) and \
+                    random.random() > 0.1: entity_factories.torch.spawn(dungeon, new_room.x1 + 1, new_room.y1 + 1)
+            if not dungeon.get_entity_at_location(new_room.x1 + 1, new_room.y2 - 1) and \
+                    random.random() > 0.1: entity_factories.torch.spawn(dungeon, new_room.x1 + 1, new_room.y2 - 1)
+            if not dungeon.get_entity_at_location(new_room.x2 - 1, new_room.y1 + 1) and \
+                    random.random() > 0.1: entity_factories.torch.spawn(dungeon, new_room.x2 - 1, new_room.y1 + 1)
+            if not dungeon.get_entity_at_location(new_room.x2 - 1, new_room.y2 - 1) and \
+                    random.random() > 0.1: entity_factories.torch.spawn(dungeon, new_room.x2 - 1, new_room.y2 - 1)
+
+        elif n < 0.9:
+            # carpet pattern
+            dungeon.tiles[new_room.inner] = tile_types.wood_planks
+            if not dungeon.get_entity_at_location(new_room.x1 + 1, new_room.y1 + 1) and \
+                    random.random() > 0.1: entity_factories.torch.spawn(dungeon, new_room.x1 + 1, new_room.y1 + 1)
+            if not dungeon.get_entity_at_location(new_room.x1 + 1, new_room.y2 - 1) and \
+                    random.random() > 0.1: entity_factories.torch.spawn(dungeon, new_room.x1 + 1, new_room.y2 - 1)
+            if not dungeon.get_entity_at_location(new_room.x2 - 1, new_room.y1 + 1) and \
+                    random.random() > 0.1: entity_factories.torch.spawn(dungeon, new_room.x2 - 1, new_room.y1 + 1)
+            if not dungeon.get_entity_at_location(new_room.x2 - 1, new_room.y2 - 1) and \
+                    random.random() > 0.1: entity_factories.torch.spawn(dungeon, new_room.x2 - 1, new_room.y2 - 1)
+            n = random.randrange(0,4)
+            if n==0:
+                entity_factories.lectern.spawn(dungeon, new_room.x1 + 1, new_room.center[1])
+            elif n==1:
+                entity_factories.lectern.spawn(dungeon, new_room.center[0], new_room.y1 + 1)
+            elif n==2:
+                entity_factories.lectern.spawn(dungeon, new_room.center[0], new_room.y2 - 1)
+            else:
+                entity_factories.lectern.spawn(dungeon, new_room.x2 - 1, new_room.center[1])
+
+            n = random.randrange(0, 4)
+            for x3 in range(new_room.x1+2,new_room.x2-1):
+                for y3 in range(new_room.y1+2,new_room.y2-1):
+                    if n==0 or n==3:
+                        if x3%2==0:
+                            if y3%2==0:
+                                entity_factories.bed.spawn(dungeon, x3, y3)
+                            else:
+                                entity_factories.cabinet.spawn(dungeon, x3, y3)
+
+                    else:
+                        if y3%2==0:
+                            if x3%2==0:
+                                entity_factories.bed.spawn(dungeon, x3, y3)
+                            else:
+                                entity_factories.cabinet.spawn(dungeon, x3, y3)
+            pass
+        else:
+            # chairs and lectern
+            n = random.randrange(0,4)
+            if n==0:
+                entity_factories.lectern.spawn(dungeon, new_room.x1 + 1, new_room.center[1])
+            elif n==1:
+                entity_factories.lectern.spawn(dungeon, new_room.center[0], new_room.y1 + 1)
+            elif n==2:
+                entity_factories.lectern.spawn(dungeon, new_room.center[0], new_room.y2 - 1)
+            else:
+                entity_factories.lectern.spawn(dungeon, new_room.x2 - 1, new_room.center[1])
+
+            for x3 in range(new_room.x1+2,new_room.x2-1):
+                for y3 in range(new_room.y1+2,new_room.y2-1):
+                    if n==0 or n==3:
+                        if x3%2==0:entity_factories.chair.spawn(dungeon, x3, y3)
+                    else:
+                        if y3%2==0:entity_factories.chair.spawn(dungeon, x3, y3)
+
+
+        # Finally, append the new room to the list.
+        rooms.append(new_room)
+    dungeon.tiles[center_of_last_room] = tile_types.down_stairs
+    dungeon.downstairs_location = center_of_last_room
+
+    return dungeon
 
 def generate_cave(
         map_width: int,
@@ -243,11 +586,11 @@ def generate_cave(
             neighbors = get_neighbors(x, y, dungeon)
             if neighbors == 0:
                 player.place(x, y, dungeon)
-                dungeon.tiles[x-1, y] = tile_types.down_stairs
+                dungeon.tiles[x - 1, y] = tile_types.down_stairs
 
-                dungeon.downstairs_location = (x-1, y)
+                dungeon.downstairs_location = (x - 1, y)
                 end = time.time()
-                print("end:",end - start)
+                print("end:", end - start)
                 return dungeon
 
 
@@ -257,8 +600,8 @@ def get_neighbors(
         dungeon: game_map.GameMap,
 ) -> int:
     neighbors = 0
-    for i in [-1,0,1]:
-        for j in [-1,0,1]:
+    for i in [-1, 0, 1]:
+        for j in [-1, 0, 1]:
             if i == 0 and j == 0:
                 pass
             else:

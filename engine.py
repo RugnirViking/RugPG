@@ -90,6 +90,8 @@ class Engine:
             if entity.ai:
                 try:
                     entity.ai.perform()
+                    for effect in entity.status_effects:
+                        effect.tick()
                 except exceptions.Impossible:
                     # TODO: make enemy print when their action is impossible if config set to debug
                     pass  # Ignore impossible action exceptions from AI.
@@ -119,10 +121,20 @@ class Engine:
             console=console,
             dungeon_level=self.game_world.current_floor,
             location=(0, 47),
+            type=self.game_world.current_floor_type
+
         )
 
         render_functions.render_names_at_mouse_location(
             console=console, x=21, y=44, engine=self
+        )
+
+        render_functions.render_names_at_mouse_location(
+            console=console, x=21, y=44, engine=self
+        )
+
+        render_functions.render_current_status_effects(
+            console=console, x=62, y=44, engine=self, width=18
         )
 
     def popup_message(self, title="Info", message="<undefined popup>", textcolor=color.white, doPending=True):

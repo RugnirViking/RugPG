@@ -60,6 +60,8 @@ def generate_cave2(
         WIDTH, HEIGHT = map_width, map_height
         INITIAL_CHANCE = 0.45  # Initial wall chance.
         CONVOLVE_STEPS = 4
+        MAX_TILES = 2000
+        MIN_TILES = 1400
         # 0: wall, 1: floor
         tiles: NDArray[np.bool_] = np.random.random((HEIGHT, WIDTH)) > INITIAL_CHANCE
         for _ in range(CONVOLVE_STEPS):
@@ -101,9 +103,9 @@ def generate_cave2(
         # show2(tiles2)
         tiles = tiles2 == biggest_blob_num
         rejected = rejected + 1
-        if floor_count > 1600:
+        if floor_count > MIN_TILES:
             valid = False
-        if floor_count > 2000:
+        if floor_count > MAX_TILES:
             valid = True
 
     rejected = rejected - 1
@@ -145,9 +147,17 @@ def generate_cave2(
         for y in range(0, HEIGHT - 1):
             num=tiles2[y, x]
             if num==0:
-                dungeon.tiles[x,y]=tile_types.floor
+                num_r=random.random()
+                if num_r<0.3:
+                    dungeon.tiles[x,y]=tile_types.cave_floor
+                elif num_r<0.6:
+                    dungeon.tiles[x,y]=tile_types.cave_floor2
+                else:
+                    dungeon.tiles[x,y]=tile_types.cave_floor3
+
             if num==3:
                 player.place(x,y,dungeon)
+                # TODO: up stairs
                 dungeon.tiles[x,y]=tile_types.floor
             if num==4:
                 dungeon.tiles[x, y] = tile_types.down_stairs
@@ -155,13 +165,14 @@ def generate_cave2(
 
     for x in range(1, WIDTH - 2):
         for y in range(1, HEIGHT - 2):
-            CHANCE_LIGHT = 0.01
+            CHANCE_LIGHT = 0.015
+            CHANCE_SHRUB = 0.95
             n = random.random()
             dx = x - playerx
             dy = y - playery
             distance = max(abs(dx), abs(dy))
-            if get_neighbors(y, x, tiles2) == 0 and distance>10:
-                if n < CHANCE_LIGHT:
+            if get_neighbors(y, x, tiles2) == 0 and distance>10 and dungeon.tiles[x,y][0]:
+                if n < CHANCE_LIGHT and not dungeon.get_blocking_entity_at_location(x, y):
                     floor_number = engine.game_world.current_floor
                     n=random.random()
                     if n<0.3:
@@ -213,6 +224,15 @@ def generate_cave2(
 
                         if not any(entity.x == x + x2 and entity.y == y + y2 and entity.blocks_movement for entity in dungeon.entities):
                             spawn_entity.spawn(dungeon, x + x2, y + y2)
+                elif n > CHANCE_SHRUB and not dungeon.get_blocking_entity_at_location(x, y) and dungeon.tiles[x,y][0]:
+                    num_r=random.random()
+                    if num_r<0.3:
+                        entity_factories.cave_plant.spawn(dungeon, x, y)
+                    elif num_r<0.6:
+                        entity_factories.cave_plant2.spawn(dungeon, x, y)
+                    else:
+                        entity_factories.cave_plant3.spawn(dungeon, x, y)
+
 
     print("rejected maps: ", rejected, " blob size: ", floor_count)
     end = time.time()

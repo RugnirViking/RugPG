@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Optional, TYPE_CHECKING
 
 from Entities.Components.base_component import BaseComponent
+from Entities.Components.equippable import Equippable
 from Entities.equipment_types import EquipmentType
 
 if TYPE_CHECKING:
@@ -12,7 +13,8 @@ if TYPE_CHECKING:
 class Equipment(BaseComponent):
     parent: Actor
 
-    def __init__(self, weapon: Optional[Item] = None, armor: Optional[Item] = None):
+    def __init__(self, weapon: Optional[Item] = None, armor: Optional[Item] = None, ring: Optional[Item] = None):
+        self.ring = ring
         self.weapon = weapon
         self.armor = armor
 
@@ -53,7 +55,7 @@ class Equipment(BaseComponent):
             f"You equip the {item_name}."
         )
 
-    def equip_to_slot(self, slot: str, item: Item, add_message: bool) -> None:
+    def equip_to_slot(self, slot: str, item: Equippable, add_message: bool) -> None:
         current_item = getattr(self, slot)
 
         if current_item is not None:
@@ -61,14 +63,17 @@ class Equipment(BaseComponent):
 
         setattr(self, slot, item)
 
+        item.equippable.equip(self.parent)
+
         if add_message:
             self.equip_message(item.name)
 
     def unequip_from_slot(self, slot: str, add_message: bool) -> None:
         current_item = getattr(self, slot)
-
         if add_message:
             self.unequip_message(current_item.name)
+
+        current_item.equippable.unequip(self.parent)
 
         setattr(self, slot, None)
 
