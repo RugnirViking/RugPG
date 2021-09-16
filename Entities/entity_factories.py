@@ -109,6 +109,7 @@ table = Entity(
     blocks_movement=True,
     render_order=RenderOrder.FURNITURE
 )
+
 bedroll = Entity(
     char="º",
     color=(170, 150, 100),
@@ -118,16 +119,16 @@ bedroll = Entity(
 )
 barrel = Entity(
     char="o",
-    color=(150, 130, 50),
+    color=(150, 100, 50),
     name="A barrel of foul-smelling liquid",
     blocks_movement=False,
     render_order=RenderOrder.FURNITURE
 )
 shelf = Entity(
-    char="o",
-    color=(150, 130, 50),
-    name="A barrel of foul-smelling liquid",
-    blocks_movement=False,
+    char="╬",
+    color=(150, 100, 50),
+    name="A shelf",
+    blocks_movement=True,
     render_order=RenderOrder.FURNITURE
 )
 chair = Entity(

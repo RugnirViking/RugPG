@@ -433,12 +433,15 @@ def generate_barracks(
                 else:
                     entity_factories.chair.spawn(dungeon, x + new_room.center[0], y + new_room.center[1])
 
-            for x, y in [[-1, -1], [-1, 0], [1, -1], [1, 0], [1, 1], [0, 1], [0, 1], [-1, 1]]:
-                n2 = random.random()
-                if n2 > 0.5:
+            for x, y in [[-1, -1], [1, -1], [1, 1], [-1, 1]]:
+                if not dungeon.get_entity_at_location(x + new_room.center[0], y + new_room.center[1]):
                     entity_factories.table.spawn(dungeon, x + new_room.center[0], y + new_room.center[1])
-                else:
-                    entity_factories.table.spawn(dungeon, x + new_room.center[0], y + new_room.center[1])
+            for x, y in [[-1, 0], [1, 0], [0, 1], [0, -1]]:
+                if not dungeon.get_entity_at_location(x + new_room.center[0], y + new_room.center[1]):
+                    entity_factories.cabinet.spawn(dungeon, x + new_room.center[0], y + new_room.center[1])
+
+            if not dungeon.get_entity_at_location(x + new_room.center[0], y + new_room.center[1]):
+                entity_factories.brazier.spawn(dungeon, new_room.center[0], new_room.center[1])
         elif n < 0.3:
             # carpet3 + statues at each corner
             dungeon.tiles[new_room.inner] = tile_types.wood_planks
@@ -450,23 +453,37 @@ def generate_barracks(
                     random.random() > 0.1: entity_factories.statue.spawn(dungeon, new_room.x2 - 1, new_room.y1 + 1)
             if not dungeon.get_entity_at_location(new_room.x2 - 1, new_room.y2 - 1) and \
                     random.random() > 0.1: entity_factories.statue.spawn(dungeon, new_room.x2 - 1, new_room.y2 - 1)
+
+            for x3 in range(new_room.x1+2,new_room.x2-1):
+                for y3 in range(new_room.y1+2,new_room.y2-1):
+                    if n==0 or n==3:
+                        if x3%2==0:
+                            if x3%4==0 and not dungeon.get_entity_at_location(x3, y3):
+                                entity_factories.shelf.spawn(dungeon, x3, y3)
+                            else:
+                                entity_factories.barrel.spawn(dungeon, x3, y3)
+
+                    else:
+                        if y3%2==0:
+                            if y3%4==0 and not dungeon.get_entity_at_location(x3, y3):
+                                entity_factories.shelf.spawn(dungeon, x3, y3)
+                            else:
+                                entity_factories.barrel.spawn(dungeon, x3, y3)
         elif n < 0.45:
             n = random.randrange(0, 4)
             for x3 in range(new_room.x1+2,new_room.x2-1):
                 for y3 in range(new_room.y1+2,new_room.y2-1):
                     if n==0 or n==3:
-                        if x3%2==0:
-                            if y3%2==0:
-                                entity_factories.bed.spawn(dungeon, x3, y3)
-                            else:
-                                entity_factories.cabinet.spawn(dungeon, x3, y3)
+                        if x3%4==0:
+                            entity_factories.bed.spawn(dungeon, x3, y3)
+                        elif (x3+1)%4==0:
+                            entity_factories.cabinet.spawn(dungeon, x3, y3)
 
                     else:
-                        if y3%2==0:
-                            if x3%2==0:
-                                entity_factories.bed.spawn(dungeon, x3, y3)
-                            else:
-                                entity_factories.cabinet.spawn(dungeon, x3, y3)
+                        if y3%4==0:
+                            entity_factories.bed.spawn(dungeon, x3, y3)
+                        elif (y3+1)%4==0:
+                            entity_factories.cabinet.spawn(dungeon, x3, y3)
         elif n < 0.6:
             # carpet1
             dungeon.tiles[new_room.inner] = tile_types.wood_planks
@@ -479,8 +496,9 @@ def generate_barracks(
             if not dungeon.get_entity_at_location(new_room.x2 - 1, new_room.y2 - 1) and \
                     random.random() > 0.1: entity_factories.torch.spawn(dungeon, new_room.x2 - 1, new_room.y2 - 1)
 
+
+
         elif n < 0.75:
-            # carpet2
             dungeon.tiles[new_room.inner] = tile_types.wood_planks
             if not dungeon.get_entity_at_location(new_room.x1 + 1, new_room.y1 + 1) and \
                     random.random() > 0.1: entity_factories.torch.spawn(dungeon, new_room.x1 + 1, new_room.y1 + 1)
@@ -492,25 +510,7 @@ def generate_barracks(
                     random.random() > 0.1: entity_factories.torch.spawn(dungeon, new_room.x2 - 1, new_room.y2 - 1)
 
         elif n < 0.9:
-            # carpet pattern
             dungeon.tiles[new_room.inner] = tile_types.wood_planks
-            if not dungeon.get_entity_at_location(new_room.x1 + 1, new_room.y1 + 1) and \
-                    random.random() > 0.1: entity_factories.torch.spawn(dungeon, new_room.x1 + 1, new_room.y1 + 1)
-            if not dungeon.get_entity_at_location(new_room.x1 + 1, new_room.y2 - 1) and \
-                    random.random() > 0.1: entity_factories.torch.spawn(dungeon, new_room.x1 + 1, new_room.y2 - 1)
-            if not dungeon.get_entity_at_location(new_room.x2 - 1, new_room.y1 + 1) and \
-                    random.random() > 0.1: entity_factories.torch.spawn(dungeon, new_room.x2 - 1, new_room.y1 + 1)
-            if not dungeon.get_entity_at_location(new_room.x2 - 1, new_room.y2 - 1) and \
-                    random.random() > 0.1: entity_factories.torch.spawn(dungeon, new_room.x2 - 1, new_room.y2 - 1)
-            n = random.randrange(0,4)
-            if n==0:
-                entity_factories.lectern.spawn(dungeon, new_room.x1 + 1, new_room.center[1])
-            elif n==1:
-                entity_factories.lectern.spawn(dungeon, new_room.center[0], new_room.y1 + 1)
-            elif n==2:
-                entity_factories.lectern.spawn(dungeon, new_room.center[0], new_room.y2 - 1)
-            else:
-                entity_factories.lectern.spawn(dungeon, new_room.x2 - 1, new_room.center[1])
 
             n = random.randrange(0, 4)
             for x3 in range(new_room.x1+2,new_room.x2-1):

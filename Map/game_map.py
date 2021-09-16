@@ -241,7 +241,7 @@ class GameWorld:
                 map_height=self.map_height,
                 engine=self.engine,
             )
-        self.current_floor_type="temple"
+        self.current_floor_type="barracks"
 
         # if n>0.5:
         #     self.engine.game_map = generate_cave2(
