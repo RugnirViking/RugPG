@@ -207,18 +207,18 @@ def generate_dungeon(
         else:  # All rooms after the first.
             # Dig out a tunnel between this room and the previous one.
             for x, y in tunnel_between(rooms[-1].center, new_room.center):
-                if not dungeon.tiles[x, y].walkable:
+                if not dungeon.tiles[x, y][0]:
                     dungeon.tiles[x, y] = tile_types.floor
 
             center_of_last_room = new_room.center
-            dungeon.tiles[center_of_last_room] = tile_types.down_stairs
-            dungeon.downstairs_location = center_of_last_room
 
         place_entities(new_room, dungeon, engine.game_world.current_floor)
 
         # Finally, append the new room to the list.
         rooms.append(new_room)
 
+    dungeon.tiles[center_of_last_room] = tile_types.down_stairs
+    dungeon.downstairs_location = center_of_last_room
     return dungeon
 
 
@@ -295,9 +295,11 @@ def generate_temple(
             for x3 in range(new_room.x1+2,new_room.x2-1):
                 for y3 in range(new_room.y1+2,new_room.y2-1):
                     if n==0 or n==3:
-                        if x3%2==0:entity_factories.statue.spawn(dungeon, x3, y3)
+                        if x3%2==0 and not dungeon.get_entity_at_location(x3, y3):
+                            entity_factories.statue.spawn(dungeon, x3, y3)
                     else:
-                        if y3%2==0:entity_factories.statue.spawn(dungeon, x3, y3)
+                        if y3%2==0 and not dungeon.get_entity_at_location(x3, y3):
+                            entity_factories.statue.spawn(dungeon, x3, y3)
         elif n < 0.6:
             # carpet1
             dungeon.tiles[new_room.inner2] = tile_types.carpet1

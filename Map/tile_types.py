@@ -81,7 +81,7 @@ wood_planks = new_tile(
     walkable=True,
     transparent=True,
     dark=(ord("≡"), (50, 35, 75), (0, 0, 0)),
-    light=(ord("≡"), (100, 90, 50),(0,0,0)),
+    light=(ord("≡"), (100, 95, 50),(0,0,0)),
 )
 snow = new_tile(
     walkable=True,

@@ -58,10 +58,6 @@ def render_dungeon_level(
         x, y = location
 
         console.print(x=x, y=y, string=f"{dungeon_level}: Barracks")
-    elif type=="quarters":
-        x, y = location
-
-        console.print(x=x, y=y, string=f"{dungeon_level}: Quarters")
     elif type=="temple":
         x, y = location
 

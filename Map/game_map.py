@@ -233,7 +233,16 @@ class GameWorld:
         self.current_floor += 1
         random.seed()
         n=random.random()
-        self.engine.game_map = generate_barracks(
+
+        if n<0.5:
+            self.engine.game_map = generate_cave2(
+                map_width=self.map_width,
+                map_height=self.map_height,
+                engine=self.engine,
+            )
+            self.current_floor_type="cave"
+        elif n<0.7:
+            self.engine.game_map = generate_barracks(
                 max_rooms=self.max_rooms,
                 room_min_size=self.room_min_size,
                 room_max_size=self.room_max_size,
@@ -241,55 +250,27 @@ class GameWorld:
                 map_height=self.map_height,
                 engine=self.engine,
             )
-        self.current_floor_type="barracks"
-
-        # if n>0.5:
-        #     self.engine.game_map = generate_cave2(
-        #         map_width=self.map_width,
-        #         map_height=self.map_height,
-        #         engine=self.engine,
-        #     )
-        #     current_floor_type="cave"
-        # elif n>0.7:
-        #     self.engine.game_map = generate_barracks(
-        #         max_rooms=self.max_rooms,
-        #         room_min_size=self.room_min_size,
-        #         room_max_size=self.room_max_size,
-        #         map_width=self.map_width,
-        #         map_height=self.map_height,
-        #         engine=self.engine,
-        #     )
-        #     current_floor_type="barracks"
-        # elif n>0.8:
-        #     self.engine.game_map = generate_quarters(
-        #         max_rooms=self.max_rooms,
-        #         room_min_size=self.room_min_size,
-        #         room_max_size=self.room_max_size,
-        #         map_width=self.map_width,
-        #         map_height=self.map_height,
-        #         engine=self.engine,
-        #     )
-        #     current_floor_type="quarters"
-        # elif n>0.9:
-        #     self.engine.game_map = generate_temple(
-        #         max_rooms=self.max_rooms,
-        #         room_min_size=self.room_min_size,
-        #         room_max_size=self.room_max_size,
-        #         map_width=self.map_width,
-        #         map_height=self.map_height,
-        #         engine=self.engine,
-        #     )
-        #     current_floor_type="temple"
-        # else:
-        #     self.engine.game_map = generate_dungeon(
-        #         max_rooms=self.max_rooms,
-        #         room_min_size=self.room_min_size,
-        #         room_max_size=self.room_max_size,
-        #         map_width=self.map_width,
-        #         map_height=self.map_height,
-        #         engine=self.engine,
-        #     )
-        #     current_floor_type="dungeon"
+            self.current_floor_type="barracks"
+        elif n<0.8:
+            self.engine.game_map = generate_temple(
+                max_rooms=self.max_rooms,
+                room_min_size=self.room_min_size,
+                room_max_size=self.room_max_size,
+                map_width=self.map_width,
+                map_height=self.map_height,
+                engine=self.engine,
+            )
+            self.current_floor_type="temple"
+        else:
+            self.engine.game_map = generate_dungeon(
+                max_rooms=self.max_rooms,
+                room_min_size=self.room_min_size,
+                room_max_size=self.room_max_size,
+                map_width=self.map_width,
+                map_height=self.map_height,
+                engine=self.engine,
+            )
+            self.current_floor_type="dungeon"
 
     def load_surface(self,filename:str) -> None:
         player = self.engine.player
