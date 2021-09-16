@@ -90,7 +90,8 @@ class Config:
                 # at least one value
                 continue
             if self.VAL_TYPES[count]==bool:
-                self.values[x[0]] = x[1]=="True"
+                print(line,x)
+                self.values[x[0]] = x[1].strip()=="True"
             else:
                 self.values[x[0]] = self.VAL_TYPES[count](x[1])
             count += 1
