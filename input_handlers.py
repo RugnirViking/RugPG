@@ -20,6 +20,7 @@ import exceptions
 from Entities.entity import Item, Entity, Actor
 
 from Entities.Components.ai import ConfusedEnemy
+from config import Config
 
 if TYPE_CHECKING:
     from engine import Engine
@@ -108,7 +109,7 @@ class EventHandler(BaseEventHandler):
             elif self.engine.player.level.requires_level_up:
                 return LevelUpEventHandler(self.engine)
             elif self.engine.pending_popup:
-                self.engine.pending_popup=False
+                self.engine.pending_popup = False
                 return PopupMessage(self, self.engine.popuptext, self.engine.popuptitle, self.engine.popup_textcolor)
             return MainGameEventHandler(self.engine)  # Return to the main handler.
         return self
@@ -139,6 +140,7 @@ class EventHandler(BaseEventHandler):
     def on_render(self, console: tcod.Console) -> None:
         self.engine.render(console)
 
+
 class GameStartHandler(EventHandler):
 
     def __init__(self, engine: Engine):
@@ -148,9 +150,9 @@ class GameStartHandler(EventHandler):
         console.tiles_rgb["fg"] //= 8
         console.tiles_rgb["bg"] //= 8
         # Draw a frame with a custom banner title.
-        console.draw_frame(3, 3, console.width-6, console.height-6,fg=color.white)
+        console.draw_frame(3, 3, console.width - 6, console.height - 6, fg=color.white)
         console.print_box(
-            3, 3, console.width-6, 1, f"┤{self.engine.popuptitle}├", alignment=tcod.CENTER
+            3, 3, console.width - 6, 1, f"┤{self.engine.popuptitle}├", alignment=tcod.CENTER
         )
         console.print(
             console.width // 2,
@@ -179,6 +181,7 @@ class GameStartHandler(EventHandler):
         # No valid key was pressed
         return MainGameEventHandler(self.engine)
 
+
 class MainGameEventHandler(EventHandler):
 
     def __init__(self, engine: Engine):
@@ -190,7 +193,7 @@ class MainGameEventHandler(EventHandler):
         key = event.sym
         modifier = event.mod
 
-        #print(key)
+        # print(key)
 
         player = self.engine.player
         if key == tcod.event.K_PERIOD and modifier & (tcod.event.KMOD_LSHIFT | tcod.event.KMOD_RSHIFT) or \
@@ -199,7 +202,7 @@ class MainGameEventHandler(EventHandler):
 
         if key in MOVE_KEYS:
             dx, dy = MOVE_KEYS[key]
-            if not isinstance(player.ai,ConfusedEnemy):
+            if not isinstance(player.ai, ConfusedEnemy):
                 action = BumpAction(player, dx, dy)
             else:
                 action = WaitAction(player)
@@ -226,7 +229,7 @@ class MainGameEventHandler(EventHandler):
             )
         elif key == tcod.event.K_l:
 
-            self.engine.game_map.flood_reveal(player.x,player.y,True)
+            self.engine.game_map.flood_reveal(player.x, player.y, True)
             return action
 
         # No valid key was pressed
@@ -538,20 +541,21 @@ class SelectIndexHandler(AskUserEventHandler):
 
 
 Entities_List = list[Entity]
-class TileEntityListHandler(AskUserEventHandler):
 
+
+class TileEntityListHandler(AskUserEventHandler):
     TITLE = "Tile Information"
 
     def __init__(self, engine: Engine, x: int, y: int, entities_in_tile: Entities_List):
         """Sets the cursor to the player when this handler is constructed."""
         super().__init__(engine)
-        self.x=x
-        self.y=y
+        self.x = x
+        self.y = y
         self.entities_in_tile = entities_in_tile
         self.entities_length = len(entities_in_tile)
         self.cursor = self.entities_length - 1
 
-    def wrap(self,string: str, width: int) -> Iterable[str]:
+    def wrap(self, string: str, width: int) -> Iterable[str]:
         """Return a wrapped text message."""
         for line in string.splitlines():  # Handle newlines in messages.
             yield from textwrap.wrap(
@@ -573,14 +577,14 @@ class TileEntityListHandler(AskUserEventHandler):
 
         for cur_entity in reversed(self.entities_in_tile):
             for line in reversed(list(self.wrap(cur_entity.name, log_console.width - 2))):
-                col=color.white
-                if isinstance(cur_entity,Item):
+                col = color.white
+                if isinstance(cur_entity, Item):
                     if cur_entity.equippable:
-                        col=color.status_effect_applied
+                        col = color.status_effect_applied
                     elif cur_entity.consumable:
-                        col=color.xp
-                elif isinstance(cur_entity,Actor):
-                    col=color.important
+                        col = color.xp
+                elif isinstance(cur_entity, Actor):
+                    col = color.important
 
                 log_console.print(x=1, y=1 + y_offset, string=line, fg=col)
                 y_offset -= 1
@@ -611,6 +615,7 @@ class TileEntityListHandler(AskUserEventHandler):
             return MainGameEventHandler(self.engine)
         return None
 
+
 class LookHandler(SelectIndexHandler):
     """Lets the player look around using the keyboard."""
 
@@ -620,9 +625,9 @@ class LookHandler(SelectIndexHandler):
         if not self.engine.game_map.in_bounds(x, y) or not self.engine.game_map.visible[x, y]:
             return MainGameEventHandler(self.engine)
 
-        entities_in_tile = [entity_a for entity_a in self.engine.game_map.entities if (entity_a.x == x and entity_a.y == y)]
+        entities_in_tile = [entity_a for entity_a in self.engine.game_map.entities if
+                            (entity_a.x == x and entity_a.y == y)]
         return TileEntityListHandler(self.engine, x, y, entities_in_tile)
-
 
 
 class SingleRangedAttackHandler(SelectIndexHandler):
@@ -772,3 +777,36 @@ class InventoryDropHandler(InventoryEventHandler):
     def on_item_selected(self, item: Item) -> Optional[ActionOrHandler]:
         """Drop this item."""
         return actions.DropItem(self.engine.player, item)
+
+
+class OptionsMenuHandler(BaseEventHandler):
+
+    def __init__(self, parent: BaseEventHandler, config: Config):
+        self.parent = parent
+        self.config = config
+
+    def on_render(self, console: tcod.Console) -> None:
+        console.tiles_rgb["fg"] //= 8
+        console.tiles_rgb["bg"] //= 8
+        # Draw a frame with a custom banner title.
+        console.draw_frame(3, 3, console.width - 6, console.height - 6, fg=color.white)
+        console.print_box(
+            3, 3, console.width - 6, 1, f"┤Options├", alignment=tcod.CENTER
+        )
+        console.print(
+            console.width // 2,
+            console.height // 8,
+            "eggs eggs are very nice I eat eggs fried with rice",
+            fg=color.white,
+            bg=color.black,
+            alignment=tcod.CENTER,
+        )
+
+    def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[ActionOrHandler]:
+        action: Optional[Action] = None
+
+        key = event.sym
+        modifier = event.mod
+
+        # No valid key was pressed
+        return self.parent

@@ -18,6 +18,8 @@ from UI import render_functions, color
 from UI.message_log import MessageLog
 from easing_functions import *
 
+from config import Config
+
 if TYPE_CHECKING:
     from Entities.entity import Actor
     from Map.game_map import GameMap, GameWorld
@@ -27,7 +29,7 @@ class Engine:
     game_map: GameMap
     game_world: GameWorld
 
-    def __init__(self, player: Actor):
+    def __init__(self, player: Actor, config: Config):
         self.pending_popup = False
         self.popup_textcolor = None
         self.popuptitle = None
@@ -38,6 +40,7 @@ class Engine:
         self.story_message = ""
         self.max_volume = 400
         self.current_volume = 0
+        self.config=config
         pygame.key.set_repeat(500, 20)
         mixer.init()
 
@@ -61,8 +64,8 @@ class Engine:
         a = QuadEaseInOut(start=0, end=1, duration=400)
         while mixer.music.get_busy():
             if self.current_volume < self.max_volume:
-                vol = a.ease(self.current_volume)  # 4 is a number between 0 and the duration you specified
-                mixer.music.set_volume(self.current_volume / self.max_volume)
+                vol = a.ease(self.current_volume)
+                mixer.music.set_volume(self.config.values["MasterVolume"]*self.config.values["MusicVolume"]*(self.current_volume / self.max_volume))
                 self.current_volume += 1
 
             time.Clock().tick(1)

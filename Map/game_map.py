@@ -175,13 +175,14 @@ class GameMap:
 
         for i in range(0,self.width):
             for j in range(0, self.height):
-                if i>0 and j>0 and i<self.width-1 and j<self.height-1:
+                if i>=0 and j>=0 and i<self.width and j<self.height:
                     neighboringfloor=0
                     for i2 in range(-1, 2):
                         for j2 in range(-1, 2):
-                            if self.tiles[i+i2,j+j2]:
-                                if self.tiles[i+i2,j+j2][0]:
-                                    neighboringfloor=neighboringfloor+1
+                            if i+i2>-1 and j+j2>-1 and i+i2<self.width and j+j2<self.height:
+                                if self.tiles[i+i2,j+j2]:
+                                    if self.tiles[i+i2,j+j2][0]:
+                                        neighboringfloor=neighboringfloor+1
                     if neighboringfloor>0:
                         self.visible[i, j] = True
                         self.explored[i, j] = True

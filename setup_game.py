@@ -15,6 +15,7 @@ from pygame import mixer
 from Entities import entity_factories
 from Map.game_map import GameWorld
 from UI import color
+from config import Config
 from engine import Engine
 import input_handlers
 from Map.procgen_dungeon import generate_dungeon
@@ -28,7 +29,7 @@ majorversion = 0
 minorversion = 1
 buildversion = 6
 
-def new_game() -> Engine:
+def new_game(config: Config) -> Engine:
     """Return a brand new game session as an Engine instance."""
     map_width = 80
     map_height = 43
@@ -51,7 +52,7 @@ def new_game() -> Engine:
 
     player = copy.deepcopy(entity_factories.player)
 
-    engine = Engine(player=player)
+    engine = Engine(player=player, config=config)
 
     engine.game_world = GameWorld(
         engine=engine,
@@ -98,6 +99,9 @@ def load_game(filename: str) -> Engine:
 
 class MainMenu(input_handlers.BaseEventHandler):
     """Handle the main menu rendering and input."""
+    def __init__(self):
+        self.config=Config()
+        print(self.config)
 
     def on_render(self, console: tcod.Console) -> None:
         """Render the main menu on a background image."""
@@ -127,7 +131,7 @@ class MainMenu(input_handlers.BaseEventHandler):
 
         menu_width = 24
         for i, text in enumerate(
-            ["[N] Play a new game", "[C] Continue last game", "[Q] Quit"]
+            ["[N] Play a new game", "[C] Continue last game", "[O] Options", "[Q] Quit"]
         ):
             console.print(
                 console.width // 2,
@@ -153,6 +157,8 @@ class MainMenu(input_handlers.BaseEventHandler):
                 traceback.print_exc()  # Print to stderr.
                 return input_handlers.PopupMessage(self, f"Failed to load save:\n{exc}")
         elif event.sym == tcod.event.K_n:
-            return input_handlers.GameStartHandler(new_game())
+            return input_handlers.GameStartHandler(new_game(self.config))
+        elif event.sym == tcod.event.K_o:
+            return input_handlers.OptionsMenuHandler(self)
 
         return None

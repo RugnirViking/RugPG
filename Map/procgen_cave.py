@@ -136,6 +136,12 @@ def generate_cave2(
             valid = distance > 10
     tiles2[stairsy, stairsx] = 4
 
+    for x in range(0, WIDTH - 1):
+        for y in range(0, HEIGHT - 1):
+            CHANCE_LIGHT=0.4
+            x=random.random()
+
+
     player = engine.player
     dungeon = game_map.GameMap(engine, WIDTH, HEIGHT, entities=[player])
     for x in range(0, WIDTH - 1):
