@@ -151,3 +151,4 @@ venvg/Include/site/python3.9/pygame/scrap.h
 venvg/Include/site/python3.9/pygame/surface.h
 .idea/rougelike.iml
 .idea/misc.xml
+config.ini
