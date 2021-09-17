@@ -18,11 +18,18 @@ class Fighter(BaseComponent):
     parent: Actor
 
     def __init__(self, hp: int, base_defense: int, base_power: int,will_chance: float=1.0):
-        self.max_hp = hp
+        self.magic_resist_base = 0
+        self.curse_resist_base = 0
+        self.poison_resist_base = 0
+        self.max_hp_base = hp
         self._hp = hp
         self.base_defense = base_defense
         self.base_power = base_power
         self.will_chance=will_chance
+
+    @property
+    def max_hp(self) -> int:
+        return self.max_hp_base + self.max_hp_bonus
 
     @property
     def hp(self) -> int:
@@ -43,6 +50,42 @@ class Fighter(BaseComponent):
         return self.base_power + self.power_bonus
 
     @property
+    def resist_poison(self) -> int:
+        return self.poison_resist_base + self.resist_poison_bonus
+
+    @property
+    def resist_magic(self) -> int:
+        return self.magic_resist_base + self.resist_magic_bonus
+
+    @property
+    def resist_curse(self) -> int:
+        return self.magic_resist_base + self.resist_curse_bonus
+
+    @property
+    def resist_poison_bonus(self) -> int:
+        if self.parent.equipment:
+            return self.parent.equipment.resist_poison_bonus
+        else:
+            return 0
+    @property
+    def resist_magic_bonus(self) -> int:
+        if self.parent.equipment:
+            return self.parent.equipment.resist_magic_bonus
+        else:
+            return 0
+    @property
+    def resist_curse_bonus(self) -> int:
+        if self.parent.equipment:
+            return self.parent.equipment.resist_curse_bonus
+        else:
+            return 0
+    @property
+    def max_hp_bonus(self) -> int:
+        if self.parent.equipment:
+            return self.parent.equipment.hp_bonus
+        else:
+            return 0
+    @property
     def defense_bonus(self) -> int:
         if self.parent.equipment:
             return self.parent.equipment.defense_bonus
@@ -57,14 +100,12 @@ class Fighter(BaseComponent):
             return 0
 
     def die(self) -> None:
-        print("ded")
         if self.engine.player is self.parent:
             death_message = "You died!"
             death_message_color = color.player_die
         else:
             death_message = f"{self.parent.name} is dead!"
             death_message_color = color.enemy_die
-
 
         self.parent.char = "%"
         self.parent.color = (191, 0, 0)

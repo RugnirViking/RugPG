@@ -4,6 +4,7 @@ from typing import Optional, TYPE_CHECKING
 
 import actions
 from Entities.Components.base_component import BaseComponent
+from Entities.Components.status_effects import AntivenomImmunityEffect
 from UI import color
 import Entities.Components.ai
 from Entities.Components.inventory import Inventory
@@ -57,6 +58,23 @@ class HealingConsumable(Consumable):
             self.consume()
         else:
             raise Impossible(f"Your health is already full.")
+
+class AntivenomConsumable(Consumable):
+    def activate(self, action: actions.ItemAction) -> None:
+        consumer = action.entity
+
+        if any(x.poison for x in consumer.status_effects):
+            self.engine.message_log.add_message(
+                f"You consume the {self.parent.name}",
+                color.health_recovered,
+            )
+            for effect in consumer.status_effects:
+                if effect.poison:
+                    effect.expire(True)
+            AntivenomImmunityEffect("Poison Resist",1,consumer,20)
+            self.consume()
+        else:
+            raise Impossible(f"You aren't poisoned")
 
 class LightningDamageConsumable(Consumable):
     def __init__(self, damage: int, maximum_range: int):

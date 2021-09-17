@@ -25,28 +25,30 @@ max_monsters_by_floor = [
     (1, 2),
     (4, 3),
     (6, 5),
+    (10, 11),
 ]
 
 item_chances: Dict[int, List[Tuple[Entity, int]]] = {
-    0: [(entity_factories.health_potion, 35)],
-    1: [(entity_factories.confusion_scroll, 10)],
+    0: [(entity_factories.health_potion, 35),(entity_factories.antivenom_potion, 10)],
+    1: [(entity_factories.confusion_scroll, 10),(entity_factories.antivenom_ring, 3)],
     2: [(entity_factories.lightning_scroll, 10), (entity_factories.fireball_scroll, 10)],
-    3: [(entity_factories.fear_scroll, 10)],
+    3: [(entity_factories.fear_scroll, 10),(entity_factories.blood_ring, 2)],
     4: [(entity_factories.charm_scroll, 5), (entity_factories.fireball_scroll, 25),
         (entity_factories.lightning_scroll, 25), (entity_factories.sword, 5)],
-    5: [(entity_factories.fear_scroll, 25)],
+    5: [(entity_factories.fear_scroll, 25),(entity_factories.antimagic_ring, 3),(entity_factories.antivenom_potion, 30)],
     6: [(entity_factories.fireball_scroll, 25), (entity_factories.chain_mail, 15)],
     7: [(entity_factories.charm_scroll, 20)],
-    8: [(entity_factories.charm_scroll, 20, (entity_factories.scale_mail, 15), (entity_factories.red_shroud, 15))],
+    8: [(entity_factories.charm_scroll, 20, (entity_factories.scale_mail, 15), (entity_factories.red_shroud, 10))],
 }
 
 enemy_chances: Dict[int, List[Tuple[Entity, int]]] = {
-    0: [(entity_factories.orc, 80)],
+    0: [(entity_factories.orc, 80),(entity_factories.mawrat, 40)],
+    2: [(entity_factories.mawrat, 120)],
     3: [(entity_factories.troll, 15)],
-    5: [(entity_factories.troll, 30)],
-    6: [(entity_factories.ice_golem, 10)],
-    7: [(entity_factories.troll, 60)],
-    9: [(entity_factories.ice_golem, 60)],
+    5: [(entity_factories.troll, 30),(entity_factories.orc, 10),(entity_factories.mawrat, 20)],
+    6: [(entity_factories.ice_golem, 10),(entity_factories.orc, 0)],
+    7: [(entity_factories.troll, 60),(entity_factories.mawbeast, 10)],
+    9: [(entity_factories.ice_golem, 60),(entity_factories.mawbeast, 30)],
 }
 
 
@@ -217,6 +219,7 @@ def generate_dungeon(
         # Finally, append the new room to the list.
         rooms.append(new_room)
 
+    dungeon.remove_entities_at_location(center_of_last_room[0],center_of_last_room[1])
     dungeon.tiles[center_of_last_room] = tile_types.down_stairs
     dungeon.downstairs_location = center_of_last_room
     return dungeon
@@ -374,6 +377,7 @@ def generate_temple(
 
         # Finally, append the new room to the list.
         rooms.append(new_room)
+    dungeon.remove_entities_at_location(center_of_last_room[0],center_of_last_room[1])
     dungeon.tiles[center_of_last_room] = tile_types.down_stairs
     dungeon.downstairs_location = center_of_last_room
 
@@ -553,6 +557,7 @@ def generate_barracks(
 
         # Finally, append the new room to the list.
         rooms.append(new_room)
+    dungeon.remove_entities_at_location(center_of_last_room[0],center_of_last_room[1])
     dungeon.tiles[center_of_last_room] = tile_types.down_stairs
     dungeon.downstairs_location = center_of_last_room
 

@@ -62,6 +62,10 @@ def render_dungeon_level(
         x, y = location
 
         console.print(x=x, y=y, string=f"{dungeon_level}: Temple Complex")
+    elif type=="special1":
+        x, y = location
+
+        console.print(x=x, y=y, string=f"{dungeon_level}: Winterfjell Deeps")
 
 
 

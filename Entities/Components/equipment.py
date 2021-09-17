@@ -28,6 +28,23 @@ class Equipment(BaseComponent):
         if self.armor is not None and self.armor.equippable is not None:
             bonus += self.armor.equippable.defense_bonus
 
+        if self.ring is not None and self.ring.equippable is not None:
+            bonus += self.ring.equippable.defense_bonus
+        return bonus
+
+    @property
+    def hp_bonus(self) -> int:
+        bonus = 0
+
+        if self.weapon is not None and self.weapon.equippable is not None:
+            bonus += self.weapon.equippable.hp_bonus
+
+        if self.armor is not None and self.armor.equippable is not None:
+            bonus += self.armor.equippable.hp_bonus
+
+        if self.ring is not None and self.ring.equippable is not None:
+            bonus += self.ring.equippable.hp_bonus
+
         return bonus
 
     @property
@@ -40,10 +57,56 @@ class Equipment(BaseComponent):
         if self.armor is not None and self.armor.equippable is not None:
             bonus += self.armor.equippable.power_bonus
 
+        if self.ring is not None and self.ring.equippable is not None:
+            bonus += self.ring.equippable.power_bonus
         return bonus
 
+    @property
+    def resist_poison_bonus(self) -> int:
+        bonus = 0
+
+        if self.weapon is not None and self.weapon.equippable is not None:
+            bonus += self.weapon.equippable.resist_poison_bonus
+
+        if self.armor is not None and self.armor.equippable is not None:
+            bonus += self.armor.equippable.resist_poison_bonus
+
+        if self.ring is not None and self.ring.equippable is not None:
+            bonus += self.ring.equippable.resist_poison_bonus
+
+        return bonus
+
+    @property
+    def resist_magic_bonus(self) -> int:
+        bonus = 0
+
+        if self.weapon is not None and self.weapon.equippable is not None:
+            bonus += self.weapon.equippable.resist_magic_bonus
+
+        if self.armor is not None and self.armor.equippable is not None:
+            bonus += self.armor.equippable.resist_magic_bonus
+
+        if self.ring is not None and self.ring.equippable is not None:
+            bonus += self.ring.equippable.resist_magic_bonus
+
+        return bonus
+
+    @property
+    def resist_curse_bonus(self) -> int:
+        bonus = 0
+
+        if self.weapon is not None and self.weapon.equippable is not None:
+            bonus += self.weapon.equippable.resist_curse_bonus
+
+        if self.armor is not None and self.armor.equippable is not None:
+            bonus += self.armor.equippable.resist_curse_bonus
+
+        if self.ring is not None and self.ring.equippable is not None:
+            bonus += self.ring.equippable.resist_curse_bonus
+
+        return bonus
     def item_is_equipped(self, item: Item) -> bool:
-        return self.weapon == item or self.armor == item
+        return self.weapon == item or self.armor == item or self.ring == item
 
     def unequip_message(self, item_name: str) -> None:
         self.parent.gamemap.engine.message_log.add_message(
@@ -83,8 +146,13 @@ class Equipment(BaseComponent):
             and equippable_item.equippable.equipment_type == EquipmentType.WEAPON
         ):
             slot = "weapon"
-        else:
+        elif(
+            equippable_item.equippable
+            and equippable_item.equippable.equipment_type == EquipmentType.ARMOR
+        ):
             slot = "armor"
+        else:
+            slot = "ring"
 
         if getattr(self, slot) == equippable_item:
             self.unequip_from_slot(slot, add_message)

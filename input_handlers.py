@@ -762,7 +762,6 @@ class InventoryEventHandler(AskUserEventHandler):
                 item_key = chr(ord("a") + i)
 
                 is_equipped = self.engine.player.equipment.item_is_equipped(item)
-
                 item_string = f"{item.name}"
 
                 col = item_color(item.rarity)
@@ -875,7 +874,7 @@ class ItemInspectHandler(AskUserEventHandler):
 class InventoryInspectHandler(InventoryEventHandler):
     """Handle inspecting an inventory item."""
 
-    TITLE = "Select an item to use"
+    TITLE = "Select an item to inspect"
 
     def on_item_selected(self, item: Item) -> Optional[ActionOrHandler]:
         return ItemInspectHandler(self.engine, item)

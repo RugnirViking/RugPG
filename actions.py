@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Optional, Tuple, TYPE_CHECKING
 
-from Entities.Components.status_effects import StatusEffect, FrostShockStatus
+from Entities.Components.status_effects import StatusEffect, FrostShockStatus, MawSiphonStatus
 from UI import color
 import exceptions
 
@@ -230,12 +230,18 @@ class FreezeSpellAction(ActionWithDirection):
 
         attack_desc = ""
         target_desc = ""
+        target_desc2 = ""
+        target_desc3 = ""
         if (target.name == "Player"):
             attack_desc = f"{self.entity.name.capitalize()} casts Frost Shock at you"
             target_desc = "you"
+            target_desc2 = "your"
+            target_desc3 = "grow"
         else:
-            attack_desc = f"{self.entity.name.capitalize()} attacks the {target.name.capitalize()}"
+            attack_desc = f"{self.entity.name.capitalize()} casts Frost Shock at the {target.name.capitalize()}"
             target_desc = f"the {target.name.capitalize()}"
+            target_desc2 = f"the {target.name.capitalize()}'s"
+            target_desc3 = "grows"
 
         if self.entity is self.engine.player:
             attack_color = color.player_atk
@@ -244,17 +250,57 @@ class FreezeSpellAction(ActionWithDirection):
 
         if damage > 0:
             self.engine.message_log.add_message(
-                f"{attack_desc} for {int(damage)} hit points and freezing {target_desc}, slowing your reactions.",
+                f"{attack_desc} for {int(damage)} hit points and freezing {target_desc}. Ice spikes begin to "
+                f"pierce {target_desc2} skin...",
                 attack_color
             )
             target.fighter.take_damage(int(damage))
-            target.status_effects.append(FrostShockStatus("Frost Shock", 1, target, 10))
+            status = FrostShockStatus("Frost Shock", 1, target, 10)
         else:
             self.engine.message_log.add_message(
-                f"{attack_desc} but does no damage.", attack_color
+                f"{attack_desc} but does no damage. However, {target_desc} {target_desc3} colder and ice spikes "
+                f"begin to pierce {target_desc2} skin...", attack_color
             )
-            target.status_effects.append(FrostShockStatus("Frost Shock", 1, target, 5))
+            status = FrostShockStatus("Frost Shock", 1, target, 5)
 
+class MawSpellAction(ActionWithDirection):
+    def __init__(self,entity,dx,dy,magnitude):
+        super().__init__(entity=entity,dx=dx,dy=dy)
+        self.magnitude=magnitude
+
+    def perform(self) -> None:
+        target = self.target_actor
+        if not target and self.entity.name == "Player":
+            raise exceptions.Impossible("Nothing to attack.")
+
+        damage = max(0,self.magnitude+3 - target.fighter.defense)
+
+        attack_desc = ""
+        target_desc = ""
+        if (target.name == "Player"):
+            attack_desc = f"{self.entity.name.capitalize()} bites your leg, injecting maw-venom"
+            target_desc = "your"
+        else:
+            attack_desc = f"{self.entity.name.capitalize()}  bites the {target.name.capitalize()}, injecting maw-venom"
+            target_desc = f"the {target.name.capitalize()}'s"
+
+        if self.entity is self.engine.player:
+            attack_color = color.player_atk
+        else:
+            attack_color = color.enemy_atk
+
+        if damage > 0:
+            self.engine.message_log.add_message(
+                f"{attack_desc} for {int(damage)} hit points and {target_desc} energy starts to be siphoned",
+                attack_color
+            )
+            target.fighter.take_damage(int(damage))
+            status = MawSiphonStatus("Maw Siphon", self.magnitude, target, 10)
+        else:
+            self.engine.message_log.add_message(
+                f"{attack_desc} and {target_desc} energy starts to be siphoned", attack_color
+            )
+            status = MawSiphonStatus("Maw Siphon", self.magnitude, target, 10)
 
 class TeleportAction(Action):
     def __init__(

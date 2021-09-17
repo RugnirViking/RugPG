@@ -7,13 +7,16 @@ import numpy as np  # type: ignore
 import tcod
 
 from UI import color
-from actions import Action, BumpAction, MeleeAction, MovementAction, WaitAction, FreezeSpellAction
+from actions import Action, BumpAction, MeleeAction, MovementAction, WaitAction, FreezeSpellAction, MawSpellAction
 
 if TYPE_CHECKING:
     from Entities.entity import Actor
 
 
 class BaseAI(Action):
+
+    def attack_action(self, distance, dx, dy, target=None) -> None:
+        raise NotImplementedError()
 
     def perform(self) -> None:
         raise NotImplementedError()
@@ -55,6 +58,10 @@ class HostileEnemy(BaseAI):
         super().__init__(entity)
         self.path: List[Tuple[int, int]] = []
 
+    def attack_action(self, distance, dx, dy, target=None) -> None:
+        if distance <= 1:
+            return MeleeAction(self.entity, dx, dy).perform()
+
     def perform(self) -> None:
         target = self.engine.player
 
@@ -63,9 +70,8 @@ class HostileEnemy(BaseAI):
         distance = max(abs(dx), abs(dy))  # Chebyshev distance. TODO: make this taxicab distance
 
         if self.engine.game_map.visible[self.entity.x, self.entity.y] and distance < self.MAX_DISTANCE:
-            if distance <= 1:
-                return MeleeAction(self.entity, dx, dy).perform()
-
+            a = self.attack_action(distance, dx, dy)
+            if a: return a
             self.path = self.get_path_to(target.x, target.y)
 
         if distance < self.MAX_DISTANCE and self.path:
@@ -80,9 +86,15 @@ class HostileEnemy(BaseAI):
 class IceSpellEnemy(HostileEnemy):
     MAX_DISTANCE = 12
 
-    def __init__(self, entity: Actor, range: int=5):
+    def __init__(self, entity: Actor, range: int = 5):
         super().__init__(entity)
-        self.range=range
+        self.range = range
+
+    def attack_action(self, distance, dx, dy, target=None) -> None:
+        if distance <= self.range and not any(x.name == "Frost Shock" for x in target.status_effects):
+            return FreezeSpellAction(self.entity, dx, dy).perform()
+        elif distance <= 1:
+            return MeleeAction(self.entity, dx, dy).perform()
 
     def perform(self) -> None:
         target = self.engine.player
@@ -92,10 +104,8 @@ class IceSpellEnemy(HostileEnemy):
         distance = max(abs(dx), abs(dy))  # Chebyshev distance. TODO: make this taxicab distance
 
         if self.engine.game_map.visible[self.entity.x, self.entity.y] and distance < self.MAX_DISTANCE:
-            if distance <= self.range and not any(x.name == "Frost Shock" for x in target.status_effects):
-                return FreezeSpellAction(self.entity, dx, dy).perform()
-            elif distance<=1:
-                return MeleeAction(self.entity, dx, dy).perform()
+            a = self.attack_action(distance, dx, dy, target)
+            if a: return a
 
             self.path = self.get_path_to(target.x, target.y)
 
@@ -106,6 +116,77 @@ class IceSpellEnemy(HostileEnemy):
             ).perform()
 
         return WaitAction(self.entity).perform()
+
+
+class RatMunchEnemy(HostileEnemy):
+    MAX_DISTANCE = 12
+
+    def __init__(self, entity: Actor, range: int = 5):
+        super().__init__(entity)
+        self.range = range
+
+    def attack_action(self, distance, dx, dy, target=None) -> None:
+        if distance <= 1 and not any(x.name == "Maw Siphon" for x in target.status_effects):
+            return MawSpellAction(self.entity, dx, dy, 1).perform()
+        elif distance <= 1:
+            return MeleeAction(self.entity, dx, dy).perform()
+
+    def perform(self) -> None:
+        target = self.engine.player
+
+        dx = target.x - self.entity.x
+        dy = target.y - self.entity.y
+        distance = max(abs(dx), abs(dy))  # Chebyshev distance. TODO: make this taxicab distance
+
+        if self.engine.game_map.visible[self.entity.x, self.entity.y] and distance < self.MAX_DISTANCE:
+            a = self.attack_action(distance, dx, dy, target)
+            if a: return a
+
+            self.path = self.get_path_to(target.x, target.y)
+
+        if distance < self.MAX_DISTANCE and self.path:
+            dest_x, dest_y = self.path.pop(0)
+            return MovementAction(
+                self.entity, dest_x - self.entity.x, dest_y - self.entity.y,
+            ).perform()
+
+        return WaitAction(self.entity).perform()
+
+
+class BeastMunchEnemy(HostileEnemy):
+    MAX_DISTANCE = 12
+
+    def __init__(self, entity: Actor, range: int = 5):
+        super().__init__(entity)
+        self.range = range
+
+    def attack_action(self, distance, dx, dy, target=None) -> None:
+        if distance <= 1 and not any(x.name == "Maw Siphon" for x in target.status_effects):
+            return MawSpellAction(self.entity, dx, dy, 2).perform()
+        elif distance <= 1:
+            return MeleeAction(self.entity, dx, dy).perform()
+
+    def perform(self) -> None:
+        target = self.engine.player
+
+        dx = target.x - self.entity.x
+        dy = target.y - self.entity.y
+        distance = max(abs(dx), abs(dy))  # Chebyshev distance. TODO: make this taxicab distance
+
+        if self.engine.game_map.visible[self.entity.x, self.entity.y] and distance < self.MAX_DISTANCE:
+            a = self.attack_action(distance, dx, dy, target)
+            if a: return a
+
+            self.path = self.get_path_to(target.x, target.y)
+
+        if distance < self.MAX_DISTANCE and self.path:
+            dest_x, dest_y = self.path.pop(0)
+            return MovementAction(
+                self.entity, dest_x - self.entity.x, dest_y - self.entity.y,
+            ).perform()
+
+        return WaitAction(self.entity).perform()
+
 
 class PlayerAI(BaseAI):
     def __init__(self, entity: Actor):
@@ -179,7 +260,7 @@ class FearedEnemy(BaseAI):
         self.previous_ai = previous_ai
         self.turns_remaining = turns_remaining
         self.fear_source = fear_source
-        self.is_magical_fear=is_magical_fear
+        self.is_magical_fear = is_magical_fear
 
     def perform(self) -> None:
         # Revert the AI back to the original state if the effect has run its course.
@@ -262,8 +343,7 @@ class CharmedEnemy(BaseAI):
                 distance = max(abs(dx), abs(dy))  # Chebyshev distance. TODO: make this taxicab distance
 
                 if self.engine.game_map.visible[self.entity.x, self.entity.y]:
-                    if distance <= 1:
-                        return MeleeAction(self.entity, dx, dy).perform()
+                    self.previous_ai.attack_action(distance, dx, dy, target)
 
                     self.path = self.get_path_to(target.x, target.y)
 

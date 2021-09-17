@@ -15,16 +15,25 @@ class Equippable(BaseComponent):
     parent: Item
 
     def __init__(
-        self,
-        equipment_type: EquipmentType,
-        power_bonus: int = 0,
-        defense_bonus: int = 0,
-        apply_effect: Optional[StatusEffect] = None
+            self,
+            equipment_type: EquipmentType,
+            power_bonus: int = 0,
+            defense_bonus: int = 0,
+            apply_effect: Optional[StatusEffect] = None,
+            hp_bonus: int = 0,
+            resist_magic_bonus: int = 0,
+            resist_poison_bonus: int = 0,
+            resist_curse_bonus: int = 0,
     ):
         self.equipment_type = equipment_type
 
         self.power_bonus = power_bonus
         self.defense_bonus = defense_bonus
+        self.hp_bonus = hp_bonus
+        self.resist_magic_bonus = resist_magic_bonus
+        self.resist_poison_bonus = resist_poison_bonus
+        self.resist_curse_bonus = resist_curse_bonus
+
         self.apply_effect = apply_effect
         self.entity: Optional[Actor] = None
 
@@ -71,3 +80,31 @@ class RedShroud(Equippable):
                          defense_bonus=1,
                          power_bonus=0,
                          apply_effect=VampirismStatusEffect("Shroudthirst", 2, None, duration=-1))
+
+
+class BloodRing(Equippable):
+    def __init__(self) -> None:
+        super().__init__(equipment_type=EquipmentType.RING, power_bonus=2)
+
+
+class CrossRing(Equippable):
+    def __init__(self) -> None:
+        super().__init__(equipment_type=EquipmentType.RING, hp_bonus=15)
+
+    def equip(self, entity: Actor):
+        super().equip(entity)
+        entity.fighter.heal(self.hp_bonus)
+
+    def unequip(self, entity: Actor):
+        super().equip(entity)
+        entity.fighter.take_damage(self.hp_bonus)
+
+
+class AntivenomRing(Equippable):
+    def __init__(self) -> None:
+        super().__init__(equipment_type=EquipmentType.RING, resist_poison_bonus=1)
+
+
+class AntimagicRing(Equippable):
+    def __init__(self) -> None:
+        super().__init__(equipment_type=EquipmentType.RING, resist_magic_bonus=1)

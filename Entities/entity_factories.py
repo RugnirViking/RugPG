@@ -1,4 +1,4 @@
-from Entities.Components.ai import HostileEnemy, PlayerAI, IceSpellEnemy
+from Entities.Components.ai import HostileEnemy, PlayerAI, IceSpellEnemy, RatMunchEnemy, BeastMunchEnemy
 from Entities.Components import consumable, equippable
 from Entities.Components.equipment import Equipment
 from Entities.Components.fighter import Fighter
@@ -12,6 +12,10 @@ from Entities.entity import Actor, Item, Entity
 #####################
 from Entities.render_order import RenderOrder
 
+
+###########################
+#       Enemies           #
+###########################
 player = Actor(
     char="@",
     color=(255, 255, 255),
@@ -45,7 +49,7 @@ troll = Actor( # real ugly lookin fellow
     inventory=Inventory(capacity=0),
     level=Level(xp_given=100),
 )
-ice_golem = Actor( # real ugly lookin fellow
+ice_golem = Actor( # big ice man big ice plan
     char="G",
     color=(0, 156, 226),
     name="Ice Golem",
@@ -55,17 +59,32 @@ ice_golem = Actor( # real ugly lookin fellow
     inventory=Inventory(capacity=0),
     level=Level(xp_given=120),
 )
-mawrat = Actor( # real ugly lookin fellow
+
+mawrat = Actor( # it knows...
     char="r",
     color=(226, 156, 156),
     name="Mawrat",
-    ai_cls=HostileEnemy,
+    ai_cls=RatMunchEnemy,
     equipment=Equipment(),
-    fighter=Fighter(hp=8, base_defense=2, base_power=2, will_chance=1.0),
+    fighter=Fighter(hp=8, base_defense=0, base_power=2, will_chance=1.0),
     inventory=Inventory(capacity=0),
-    level=Level(xp_given=120),
+    level=Level(xp_given=50),
+)
+mawbeast = Actor( # it knows more...
+    char="M",
+    color=(226, 156, 156),
+    name="Mawbeast",
+    ai_cls=BeastMunchEnemy,
+    equipment=Equipment(),
+    fighter=Fighter(hp=18, base_defense=4, base_power=4, will_chance=1.0),
+    inventory=Inventory(capacity=0),
+    level=Level(xp_given=150),
 )
 
+
+###########################
+#       Furniture         #
+###########################
 snowdrift = Entity(
     char="^",
     color=(255, 255, 255),
@@ -215,6 +234,15 @@ health_potion = Item(
     description="A vial of a red liquid - a healing potion. It heals 4 hitpoints when used. "
                 "Doesn't smell great and tastes sickly sweet"
 )
+antivenom_potion = Item(
+    char="!",
+    color=(167, 227, 127),
+    name="Antivenom Potion",
+    consumable=consumable.AntivenomConsumable(),
+    rarity=Rarity.COMMON,
+    description="A vial of a green liquid - an emergency tincture that grants relief to those that have been poisoned. "
+                "Removes poison effects when used. Doesn't smell great and tastes sickly sweet"
+)
 lightning_scroll = Item(
     char="~",
     color=(255, 255, 0),
@@ -326,11 +354,12 @@ chain_mail = Item(
 scale_mail = Item(
     char="[",
     color=(139, 69, 19),
-    name="Chain Mail",
+    name="Scale Mail",
     equippable=equippable.ScaleMail(),
     rarity=Rarity.UNCOMMON,
     description="An unusual suit of armour made from small interlocking metal plates. The links are somewhat "
-                "vulnerable to flying apart when hit particularly hard. You think it makes you look like a fish."
+                "vulnerable to flying apart when hit particularly hard. You think it makes you look like a fish. "
+                "(+3 def +1 pow)"
 )
 red_shroud = Item(
     char="[",
@@ -340,6 +369,44 @@ red_shroud = Item(
     rarity=Rarity.RARE,
     description="An unsettling red shroud with a rough picture of a face burned into it. "
                 "Who made this horrible thing, and why? Holding it you can tell its made well, but there's something "
-                "that tells you it is not a good idea to wear for too long"
+                "that tells you it is not a good idea to wear for too long (+1 def, Shroudthirst)"
 )
 
+
+cross_ring = Item(
+    char="[",
+    color=(0, 191, 255),
+    name="Cross-Faced Ring",
+    equippable=equippable.CrossRing(),
+    rarity=Rarity.COMMON,
+    description="This ring has an ornate cross face carved into one end of it. Wearing it makes you feel tougher "
+                "(+15 max hp)"
+)
+antivenom_ring = Item(
+    char="[",
+    color=(0, 191, 255),
+    name="Ring of the Serpent",
+    equippable=equippable.AntivenomRing(),
+    rarity=Rarity.UNCOMMON,
+    description="These lightly magical rings are mass-produced in the south, where they are useful for dealing with "
+                "the effects of animal bites (resist poison effects +1)"
+)
+antimagic_ring = Item(
+    char="[",
+    color=(0, 191, 255),
+    name="Antivenom Ring",
+    equippable=equippable.AntimagicRing(),
+    rarity=Rarity.RARE,
+    description="These valuable rings are used in the training of wizards. It allows the wearer to be less effected "
+                "by magic, which is helpful when a novice sorcerer casts fireball in the auditorium! "
+                "(resist magic effects +1)"
+)
+blood_ring = Item(
+    char="[",
+    color=(0, 191, 255),
+    name="Blood Ring",
+    equippable=equippable.BloodRing(),
+    rarity=Rarity.RARE,
+    description="This ring has a teardrop cabochon cut ruby inset into it's face. Wearing it makes you feel upset "
+                "with the world (+1 pow)"
+)

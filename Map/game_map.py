@@ -95,6 +95,13 @@ class GameMap:
 
         return None
 
+    def remove_entities_at_location(self, location_x: int, location_y: int) -> Optional[Entity]:
+        for entity in self.entities:
+            if entity.x == location_x and entity.y == location_y:
+                self.entities.remove(entity)
+
+        return None
+
     def get_actor_at_location(self, x: int, y: int) -> Optional[Actor]:
         for actor in self.actors:
             if actor.x == x and actor.y == y:
@@ -275,6 +282,8 @@ class GameWorld:
     def load_surface(self,filename:str) -> None:
         player = self.engine.player
         dungeon = GameMap(self.engine, self.map_width, self.map_height, entities=[player])
+
+        self.current_floor_type="special1"
 
         with open(filename, newline='') as csvfile:
             spamreader = csv.reader(csvfile, delimiter=',', quotechar='|')

@@ -71,16 +71,21 @@ def new_game(config: Config) -> Engine:
     )
 
     dagger = copy.deepcopy(entity_factories.dagger)
-    leather_armor = copy.deepcopy(entity_factories.red_shroud)
+    leather_armor = copy.deepcopy(entity_factories.leather_armor)
+    ring = copy.deepcopy(entity_factories.cross_ring)
 
     dagger.parent = player.inventory
     leather_armor.parent = player.inventory
+    ring.parent = player.inventory
 
     player.inventory.items.append(dagger)
     player.equipment.toggle_equip(dagger, add_message=False)
 
     player.inventory.items.append(leather_armor)
     player.equipment.toggle_equip(leather_armor, add_message=False)
+
+    player.inventory.items.append(ring)
+    player.equipment.toggle_equip(ring, add_message=False)
 
     engine.popup_message("Welcome",starter_message,color.welcome_text,False)
     engine.story_message = story_message
