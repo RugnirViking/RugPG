@@ -96,7 +96,7 @@ class GameMap:
         return None
 
     def remove_entities_at_location(self, location_x: int, location_y: int) -> Optional[Entity]:
-        for entity in self.entities:
+        for entity in self.entities.copy():
             if entity.x == location_x and entity.y == location_y:
                 self.entities.remove(entity)
 
