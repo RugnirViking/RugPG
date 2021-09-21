@@ -6,7 +6,7 @@ import subprocess
 import threading
 import multiprocessing
 import random
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List
 
 import pygame
 from pygame import mixer, time
@@ -30,6 +30,7 @@ class Engine:
     game_world: GameWorld
 
     def __init__(self, player: Actor, config: Config):
+        from Entities.Components.skill import SKILLS_LIST
         self.pending_popup = False
         self.popup_textcolor = None
         self.popuptitle = None
@@ -37,10 +38,12 @@ class Engine:
         self.message_log = MessageLog()
         self.mouse_location = (0, 0)
         self.player = player
+        self.player.skill_points=15
         self.story_message = ""
         self.max_volume = 400
         self.current_volume = 0
         self.config=config
+        self.skills_list:List[Skill]=SKILLS_LIST
         mixer.init()
 
         self.play_song("viking1.mp3")
@@ -90,6 +93,7 @@ class Engine:
             if entity.ai:
                 try:
                     entity.ai.perform()
+                    entity.fighter.tick_energy()
                     for effect in entity.status_effects:
                         effect.tick()
                 except exceptions.Impossible:
@@ -110,17 +114,25 @@ class Engine:
         self.game_map.render(console, self.player.x, self.player.y)
 
         self.message_log.render(console=console, x=21, y=45, width=40, height=5)
-        render_functions.render_bar(
+        render_functions.render_health_bar(
             console=console,
             current_value=self.player.fighter.hp,
             maximum_value=self.player.fighter.max_hp,
             total_width=20,
         )
 
+        if self.player.fighter.max_energy>0:
+            render_functions.render_energy_bar(
+                console=console,
+                current_value=self.player.fighter.energy,
+                maximum_value=self.player.fighter.max_energy,
+                total_width=20,
+            )
+
         render_functions.render_dungeon_level(
             console=console,
             dungeon_level=self.game_world.current_floor,
-            location=(0, 47),
+            location=(0, 48),
             type=self.game_world.current_floor_type
 
         )

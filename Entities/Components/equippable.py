@@ -24,6 +24,8 @@ class Equippable(BaseComponent):
             resist_magic_bonus: int = 0,
             resist_poison_bonus: int = 0,
             resist_curse_bonus: int = 0,
+            energy_charge_bonus: int = 0,
+            max_energy_bonus: int = 0,
     ):
         self.equipment_type = equipment_type
 
@@ -33,6 +35,8 @@ class Equippable(BaseComponent):
         self.resist_magic_bonus = resist_magic_bonus
         self.resist_poison_bonus = resist_poison_bonus
         self.resist_curse_bonus = resist_curse_bonus
+        self.energy_charge_bonus = energy_charge_bonus
+        self.max_energy_bonus = max_energy_bonus
 
         self.apply_effect = apply_effect
         self.entity: Optional[Actor] = None
@@ -108,3 +112,8 @@ class AntivenomRing(Equippable):
 class AntimagicRing(Equippable):
     def __init__(self) -> None:
         super().__init__(equipment_type=EquipmentType.RING, resist_magic_bonus=1)
+
+class ManaRing(Equippable):
+    def __init__(self) -> None:
+        super().__init__(equipment_type=EquipmentType.RING, max_energy_bonus=10)
+

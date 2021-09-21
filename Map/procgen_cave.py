@@ -226,10 +226,12 @@ def generate_cave2(
                             spawn_entity.spawn(dungeon, x + x2, y + y2)
                 elif n > CHANCE_SHRUB and not dungeon.get_blocking_entity_at_location(x, y) and dungeon.tiles[x,y][0]:
                     num_r=random.random()
-                    if num_r<0.3:
+                    if num_r<0.25:
                         entity_factories.cave_plant.spawn(dungeon, x, y)
-                    elif num_r<0.6:
+                    elif num_r<0.5:
                         entity_factories.cave_plant2.spawn(dungeon, x, y)
+                    elif num_r<0.75:
+                        entity_factories.cave_plant4.spawn(dungeon, x, y)
                     else:
                         entity_factories.cave_plant3.spawn(dungeon, x, y)
 

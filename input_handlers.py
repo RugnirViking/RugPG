@@ -6,8 +6,6 @@ from typing import Callable, Optional, Tuple, TYPE_CHECKING, Union, Iterable
 
 import os
 import tcod.event
-
-import actions
 from Entities import entity
 from Entities.Components.rarities import Rarity, item_color
 from UI import color
@@ -22,10 +20,14 @@ from Entities.entity import Item, Entity, Actor
 
 from Entities.Components.ai import ConfusedEnemy
 from config import Config
+from UI.skills_render import render_skills
 
+import actions
 if TYPE_CHECKING:
     from engine import Engine
     from Entities.entity import Item, Entity
+    from Entities.Components.skill import Skill
+
 
 MOVE_KEYS = {
     # Arrow keys.
@@ -226,6 +228,8 @@ class MainGameEventHandler(EventHandler):
             return LookHandler(self.engine)
         elif key == tcod.event.K_c:
             return CharacterScreenEventHandler(self.engine)
+        elif key == tcod.event.K_j:
+            return SkillListHandler(self.engine)
         if self.engine.config.values["AllowDebug"]:
             if key == tcod.event.K_o:
                 player.ai = ConfusedEnemy(
@@ -267,6 +271,10 @@ CURSOR_Y_KEYS = {
     tcod.event.K_DOWN: 1,
     tcod.event.K_PAGEUP: -10,
     tcod.event.K_PAGEDOWN: 10,
+}
+CURSOR_X_KEYS = {
+    tcod.event.K_LEFT: -1,
+    tcod.event.K_RIGHT: 1,
 }
 
 
@@ -714,6 +722,162 @@ class AreaRangedAttackHandler(SelectIndexHandler):
 
     def on_index_selected(self, x: int, y: int) -> Optional[Action]:
         return self.callback((x, y))
+
+
+class SkillTreeHandler(AskUserEventHandler):
+    TITLE = "Skill Trees"
+
+    def __init__(self, engine: Engine):
+        """Sets the cursor to the player when this handler is constructed."""
+        super().__init__(engine)
+        self.y_offset=0
+        self.y_min=0
+        self.y_max=50
+        self.selected_skill_index=0
+
+    def wrap(self, string: str, width: int) -> Iterable[str]:
+        """Return a wrapped text message."""
+        for line in string.splitlines():  # Handle newlines in messages.
+            yield from textwrap.wrap(
+                line, width, expand_tabs=True,
+            )
+
+    def on_render(self, console: tcod.Console) -> None:
+        super().on_render(console)
+
+        log_console = tcod.Console(console.width, console.height)
+
+        # Draw a frame with a custom banner title.
+        log_console.draw_frame(0, 0, log_console.width, log_console.height)
+        log_console.print_box(
+            0, 0, log_console.width, 1, f"┤{self.TITLE}├", alignment=tcod.CENTER
+        )
+        m_x, m_y = self.engine.mouse_location
+        for skill in self.engine.skills_list:
+            if m_x>=skill.x and m_x<skill.x+5:
+                if m_y>=skill.y-self.y_offset+2 and m_y<skill.y-self.y_offset+7:
+                    self.selected_skill_index=self.engine.skills_list.index(skill)
+                    break
+
+        render_skills(log_console,self.engine,self.y_offset+1,self.selected_skill_index)
+
+        log_console.blit(console, 0, 0)
+    def level_skill(self,skill):
+        if skill.level_up(self.engine.player):
+            self.engine.player.skill_points-=1
+
+    def ev_mousebuttondown(
+            self, event: tcod.event.MouseButtonDown
+    ) -> Optional[ActionOrHandler]:
+        """Left click confirms a selection."""
+        m_x, m_y = self.engine.mouse_location
+        found_skill=None
+        for skill in self.engine.skills_list:
+            if m_x>=skill.x and m_x<skill.x+5:
+                if m_y>=skill.y-self.y_offset+2 and m_y<skill.y-self.y_offset+7:
+                    self.selected_skill_index=self.engine.skills_list.index(skill)
+                    found_skill=skill
+                    break
+
+        if event.button == 1 and found_skill is not None:
+            self.level_skill(found_skill)
+        else:
+            return super().ev_mousebuttondown(event)
+
+    def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[MainGameEventHandler]:
+        # Fancy conditional movement to make it feel right.
+        if event.sym in CURSOR_Y_KEYS:
+            adjust = CURSOR_Y_KEYS[event.sym]
+            self.y_offset = max(self.y_min, min(self.y_offset + adjust, self.y_max))
+        elif event.sym in CURSOR_X_KEYS:
+            adjust = CURSOR_X_KEYS[event.sym]
+            self.selected_skill_index = max(0, min(self.selected_skill_index + adjust, len(self.engine.skills_list)-1))
+        elif event.sym in CONFIRM_KEYS:
+            self.level_skill(self.engine.skills_list[self.selected_skill_index])
+        elif event.sym==tcod.event.K_SPACE:
+            str=""
+            for skill in self.engine.player.skills:
+                str+=f" ({skill.level}) {skill.name},"
+            print(str)
+        elif event.sym==tcod.event.K_ESCAPE:
+            return super().ev_keydown(event)
+
+
+
+class SkillListHandler(AskUserEventHandler):
+    """This handler lets the user select a skill.
+
+    What happens then depends on the subclass.
+    """
+
+    TITLE = "Skills Menu"
+
+    def on_render(self, console: tcod.Console) -> None:
+        """Render an inventory menu, which displays the items in the inventory, and the letter to select them.
+        Will move to a different position based on where the player is located, so the player can always see where
+        they are.
+        """
+        super().on_render(console)
+        number_of_skills = len(self.engine.player.skills)
+
+        height = number_of_skills + 3
+
+        if height <= 3:
+            height = 3
+
+        if self.engine.player.x <= 30:
+            x = 40
+        else:
+            x = 0
+
+        y = 0
+
+        width = len(self.TITLE) + 4
+        num=0
+        console.draw_frame(
+            x=x,
+            y=y,
+            width=width,
+            height=height,
+            title=self.TITLE,
+            clear=True,
+            fg=(255, 255, 255),
+            bg=(0, 0, 0),
+        )
+
+        if number_of_skills > 0:
+            for i, skill in enumerate(self.engine.player.active_skills):
+                item_key = chr(ord("a") + i)
+
+                item_string = f"{skill.name}"
+
+                console.print(x+1,y+i+1,f"({item_key}) ",color.white)
+                console.print(x + 5, y + i + 1, item_string, fg=color.white)
+                num=i+1
+        else:
+            console.print(x + 1, y + 1, "(Empty)")
+            num=0
+        console.print(x + 1, y + num+2, f"(z) Skill Trees")
+
+    def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[ActionOrHandler]:
+        player = self.engine.player
+        key = event.sym
+        index = key - tcod.event.K_a
+
+        if 0 <= index <= 24:
+            try:
+                selected_skill = player.active_skills[index]
+            except IndexError:
+                self.engine.message_log.add_message("No item in that skill slot", color.invalid)
+                return None
+            return self.on_skill_selected(selected_skill)
+        if index==25:
+            return SkillTreeHandler(self.engine)
+
+        return super().ev_keydown(event)
+    def on_skill_selected(self, skill: Skill) -> Optional[ActionOrHandler]:
+        """Called when the user selects a valid item."""
+        return skill.action
 
 
 class InventoryEventHandler(AskUserEventHandler):

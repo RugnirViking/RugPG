@@ -62,6 +62,36 @@ class Equipment(BaseComponent):
         return bonus
 
     @property
+    def energy_charge_bonus(self) -> int:
+        bonus = 0
+
+        if self.weapon is not None and self.weapon.equippable is not None:
+            bonus += self.weapon.equippable.energy_charge_bonus
+
+        if self.armor is not None and self.armor.equippable is not None:
+            bonus += self.armor.equippable.energy_charge_bonus
+
+        if self.ring is not None and self.ring.equippable is not None:
+            bonus += self.ring.equippable.energy_charge_bonus
+
+        return bonus
+
+    @property
+    def max_energy_bonus(self) -> int:
+        bonus = 0
+
+        if self.weapon is not None and self.weapon.equippable is not None:
+            bonus += self.weapon.equippable.max_energy_bonus
+
+        if self.armor is not None and self.armor.equippable is not None:
+            bonus += self.armor.equippable.max_energy_bonus
+
+        if self.ring is not None and self.ring.equippable is not None:
+            bonus += self.ring.equippable.max_energy_bonus
+
+        return bonus
+
+    @property
     def resist_poison_bonus(self) -> int:
         bonus = 0
 

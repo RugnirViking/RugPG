@@ -120,7 +120,12 @@ cave_plant3 = Entity(
     name="Brewspout Mushroom",
     blocks_movement=False
 )
-
+cave_plant4 = Entity(
+    char="τ",
+    color=(120, 80, 70),
+    name="Babymuffin Mushroom",
+    blocks_movement=False
+)
 table = Entity(
     char="┬",
     color=(70, 50, 0),
@@ -375,11 +380,11 @@ red_shroud = Item(
 
 cross_ring = Item(
     char="[",
-    color=(0, 191, 255),
+    color=(160, 160, 160),
     name="Cross-Faced Ring",
     equippable=equippable.CrossRing(),
     rarity=Rarity.COMMON,
-    description="This ring has an ornate cross face carved into one end of it. Wearing it makes you feel tougher "
+    description="This stone ring has an ornate cross face into its face. Wearing it makes you feel tougher"
                 "(+15 max hp)"
 )
 antivenom_ring = Item(
@@ -393,8 +398,8 @@ antivenom_ring = Item(
 )
 antimagic_ring = Item(
     char="[",
-    color=(0, 191, 255),
-    name="Antivenom Ring",
+    color=(100, 100, 120),
+    name="Antimagic Ring",
     equippable=equippable.AntimagicRing(),
     rarity=Rarity.RARE,
     description="These valuable rings are used in the training of wizards. It allows the wearer to be less effected "
@@ -403,10 +408,19 @@ antimagic_ring = Item(
 )
 blood_ring = Item(
     char="[",
-    color=(0, 191, 255),
+    color=(255, 0, 0),
     name="Blood Ring",
     equippable=equippable.BloodRing(),
     rarity=Rarity.RARE,
     description="This ring has a teardrop cabochon cut ruby inset into it's face. Wearing it makes you feel upset "
                 "with the world (+1 pow)"
+)
+mana_ring = Item(
+    char="[",
+    color=(0, 80, 225),
+    name="Mana Ring",
+    equippable=equippable.ManaRing(),
+    rarity=Rarity.RARE,
+    description="This ring infuses the wearer with magical energies. Often used by sorcerers when performing long "
+                "rituals, it allows the wearer cast more spells without feeling tired"
 )

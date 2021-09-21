@@ -279,6 +279,8 @@ class GameWorld:
             )
             self.current_floor_type="dungeon"
 
+        self.engine.player.fighter.energy=self.engine.player.fighter.max_energy
+
     def load_surface(self,filename:str) -> None:
         player = self.engine.player
         dungeon = GameMap(self.engine, self.map_width, self.map_height, entities=[player])

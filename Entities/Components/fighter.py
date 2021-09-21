@@ -17,19 +17,26 @@ if TYPE_CHECKING:
 class Fighter(BaseComponent):
     parent: Actor
 
-    def __init__(self, hp: int, base_defense: int, base_power: int,will_chance: float=1.0):
+    def __init__(self, hp: int, base_defense: int, base_power: int,will_chance: float=1.0,base_energy: int=0,base_max_energy: int=0):
+        self.base_energy = base_energy
+        self.base_max_energy = base_max_energy
         self.magic_resist_base = 0
         self.curse_resist_base = 0
         self.poison_resist_base = 0
         self.max_hp_base = hp
         self._hp = hp
+        self._energy = base_max_energy
         self.base_defense = base_defense
         self.base_power = base_power
         self.will_chance=will_chance
+        self.tick_counter=0
 
     @property
     def max_hp(self) -> int:
         return self.max_hp_base + self.max_hp_bonus
+    @property
+    def max_energy(self) -> int:
+        return self.base_max_energy + self.max_energy_bonus
 
     @property
     def hp(self) -> int:
@@ -40,6 +47,14 @@ class Fighter(BaseComponent):
         self._hp = max(0, min(value, self.max_hp))
         if self._hp == 0 and self.parent.ai:
             self.die()
+
+    @property
+    def energy(self) -> int:
+        return self._energy
+
+    @energy.setter
+    def energy(self, value: int) -> None:
+        self._energy = max(0, min(value, self.max_energy))
 
     @property
     def defense(self) -> int:
@@ -61,6 +76,18 @@ class Fighter(BaseComponent):
     def resist_curse(self) -> int:
         return self.magic_resist_base + self.resist_curse_bonus
 
+    @property
+    def max_energy_bonus(self) -> int:
+        if self.parent.equipment:
+            return self.parent.equipment.max_energy_bonus
+        else:
+            return 0
+    @property
+    def energy_charge_bonus(self) -> int:
+        if self.parent.equipment:
+            return self.parent.equipment.energy_charge_bonus
+        else:
+            return 0
     @property
     def resist_poison_bonus(self) -> int:
         if self.parent.equipment:
@@ -133,6 +160,9 @@ class Fighter(BaseComponent):
         for effect in self.parent.status_effects:
             effect.on_heal(amount_recovered)
 
+        for skill in self.parent.skills:
+            skill.on_heal(amount_recovered)
+
         return amount_recovered
 
     def take_damage(self, amount: int) -> None:
@@ -144,6 +174,9 @@ class Fighter(BaseComponent):
         for effect in self.parent.status_effects:
             effect.on_damaged(entity,damage)
 
+        for skill in self.parent.skills:
+            skill.on_damaged(entity,damage)
+
         n=random.random()
         if self.hp<self.max_hp/3 and n>self.will_chance and self.parent.is_alive:
             self.engine.message_log.add_message(
@@ -153,3 +186,32 @@ class Fighter(BaseComponent):
             self.parent.ai = FearedEnemy(
                 entity=self.parent, previous_ai=self.parent.ai, turns_remaining=99, fear_source=entity,
             )
+
+    def gain_energy(self, mana_amount):
+        if self.energy == self.max_energy_bonus:
+            return 0
+
+        new_energy = self.energy + mana_amount
+
+        if new_energy > self.max_energy_bonus:
+            new_energy = self.max_energy_bonus
+
+        amount_recovered = new_energy - self.energy
+
+        self.energy = new_energy
+
+        for effect in self.parent.status_effects:
+            effect.on_gain_energy(amount_recovered)
+
+        for skill in self.parent.skills:
+            skill.on_gain_energy(amount_recovered)
+
+        return amount_recovered
+
+    def tick_energy(self):
+        if self.energy<self.max_energy:
+            if self.tick_counter < 10:
+                self.tick_counter=self.tick_counter+1
+            else:
+                self.gain_energy(1)
+                self.tick_counter=0

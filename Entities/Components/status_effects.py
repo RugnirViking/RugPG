@@ -4,7 +4,6 @@ from typing import Tuple, Optional
 from Entities.entity import Actor
 from UI import color
 
-
 class StatusEffect:
     def __init__(self,
                  name: str,
@@ -71,6 +70,10 @@ class StatusEffect:
         if self.entity.name=="Player":
             entity_name="You"
         return entity_name
+
+    def on_gain_energy(self, amount_recovered):
+        pass
+
 
 class FrostShockStatus(StatusEffect):
     def __init__(self,

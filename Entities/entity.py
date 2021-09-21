@@ -4,8 +4,6 @@ import copy
 import math
 from typing import Optional, Tuple, Type, TypeVar, TYPE_CHECKING, Union, List
 
-import Entities.Components.status_effects
-from Entities.Components import status_effects, rarities
 from Entities.Components.rarities import Rarity
 from Entities.render_order import RenderOrder
 
@@ -18,6 +16,8 @@ if TYPE_CHECKING:
     from Components.inventory import Inventory
     from Components.level import Level
     from Map.game_map import GameMap
+    from Entities.Components.skill import Skill
+    from Entities.Components import status_effects, rarities
 
 T = TypeVar("T", bound="Entity")
 
@@ -109,6 +109,8 @@ class Actor(Entity):
             level: Level,
             emits_light: bool = False,
             light_level: int = 0,
+            skills:List[Skill] = None,
+            skill_points:int=0,
     ):
         super().__init__(
             x=x,
@@ -136,6 +138,26 @@ class Actor(Entity):
         self.level = level
         self.level.parent = self
         self.status_effects: List[status_effects.StatusEffect] = []
+        self.skills = skills
+        if not skills:
+            self.skills: List[Skill] = []
+
+        self.skill_points=skill_points
+
+    def skill_with_name(self,skill_name):
+        for skill in self.skills:
+            if skill.name==skill_name:
+                return skill
+        return False
+
+    @property
+    def active_skills(self) -> List[Skill]:
+        """Returns True as long as this actor can perform actions."""
+        sublist = []
+        for o in self.skills:
+            if o.active_skill:
+                sublist.append(o)
+        return sublist
 
     @property
     def is_alive(self) -> bool:

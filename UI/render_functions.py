@@ -22,7 +22,7 @@ def get_names_at_location(x: int, y: int, game_map: GameMap) -> str:
     return names.capitalize()
 
 
-def render_bar(
+def render_health_bar(
         console: Console, current_value: int, maximum_value: int, total_width: int
 ) -> None:
     bar_width = int(float(current_value) / maximum_value * total_width)
@@ -38,6 +38,22 @@ def render_bar(
         x=1, y=45, string=f"HP: {current_value}/{maximum_value}", fg=color.bar_text
     )
 
+def render_energy_bar(
+        console: Console, current_value: int, maximum_value: int, total_width: int
+) -> None:
+    bar_width = int(float(current_value) / maximum_value * total_width)
+
+    console.draw_rect(x=0, y=46, width=20, height=1, ch=1, bg=color.energy_bar_mana_empty)
+
+    if bar_width > 0:
+        console.draw_rect(
+            x=0, y=46, width=bar_width, height=1, ch=1, bg=color.energy_bar_mana_filled
+        )
+
+    console.print(
+        x=1, y=46, string=f"Energy: {current_value}/{maximum_value}", fg=color.bar_text
+    )
+
 
 def render_dungeon_level(
         console: Console, dungeon_level: int, location: Tuple[int, int],type:str="dungeon"
@@ -45,27 +61,25 @@ def render_dungeon_level(
     """
     Render the level the player is currently on, at the given location.
     """
+    level_name = ""
     if type=="dungeon":
         x, y = location
         n=random.random()
-
-        console.print(x=x, y=y, string=f"{dungeon_level}: Dungeon Vaults")
+        level_name="Dungeon Vaults"
     elif type=="cave":
         x, y = location
-
-        console.print(x=x, y=y, string=f"{dungeon_level}: Caverns")
+        level_name="Caverns"
     elif type=="barracks":
         x, y = location
-
-        console.print(x=x, y=y, string=f"{dungeon_level}: Barracks")
+        level_name="Barracks"
     elif type=="temple":
         x, y = location
-
-        console.print(x=x, y=y, string=f"{dungeon_level}: Temple Complex")
+        level_name="Temple Complex"
     elif type=="special1":
+        level_name="Winterfjell Deeps"
         x, y = location
 
-        console.print(x=x, y=y, string=f"{dungeon_level}: Winterfjell Deeps")
+    console.print(x=x, y=y, string=f"{dungeon_level}: {level_name}")
 
 
 

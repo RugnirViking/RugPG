@@ -9,6 +9,7 @@ import exceptions
 if TYPE_CHECKING:
     from engine import Engine
     from Entities.entity import Actor, Entity, Item
+    from Entities.Components.skill import Skill
 
 
 class Action:
@@ -78,6 +79,25 @@ class ItemAction(Action):
         """Invoke the items ability, this action will be given to provide context."""
         if self.item.consumable:
             self.item.consumable.activate(self)
+
+class SkillAction(Action):
+    def __init__(
+            self, entity: Actor, skill: Skill, target_xy: Optional[Tuple[int, int]] = None
+    ):
+        super().__init__(entity)
+        self.skill = skill
+        if not target_xy:
+            target_xy = entity.x, entity.y
+        self.target_xy = target_xy
+
+    @property
+    def target_actor(self) -> Optional[Actor]:
+        """Return the actor at this actions destination."""
+        return self.engine.game_map.get_actor_at_location(*self.target_xy)
+
+    def perform(self) -> None:
+        """Invoke the items ability, this action will be given to provide context."""
+        self.skill.activate(self.target_xy)
 
 
 class DropItem(ItemAction):

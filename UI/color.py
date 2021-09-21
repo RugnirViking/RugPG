@@ -25,6 +25,11 @@ health_recovered_effect = (0x0, 0xCF, 0x0)
 bar_text = white
 bar_filled = (0x0, 0x60, 0x0)
 bar_empty = (0x40, 0x10, 0x10)
+energy_bar_mana_filled=(50, 50, 255)
+energy_bar_mana_empty=(0, 0, 150)
+energy_bar_filled=(255, 205, 150)
+energy_bar_empty=(255, 205, 150)
+
 item_description = (0xA0, 0xA0, 0xA0)
 equipped = (0x8F, 0x8F, 0xCF)
 
@@ -40,3 +45,11 @@ item_uncommon=(150, 255, 150)
 item_rare=(0, 200, 255)
 item_epic=(205, 150, 255)
 item_legendary=(255, 205, 150)
+
+skill_points=(235,235,0)
+
+selected_skill=(255, 255, 255)
+unselected_skill=(150, 150, 150)
+passive_skill=(150, 220, 255)
+requirement_yes=(150, 255, 150)
+requirement_no=(255, 150, 150)
