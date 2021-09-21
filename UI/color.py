@@ -53,3 +53,5 @@ unselected_skill=(150, 150, 150)
 passive_skill=(150, 220, 255)
 requirement_yes=(150, 255, 150)
 requirement_no=(255, 150, 150)
+
+skill_text=(50,255,205)

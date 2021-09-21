@@ -97,7 +97,7 @@ class SkillAction(Action):
 
     def perform(self) -> None:
         """Invoke the items ability, this action will be given to provide context."""
-        self.skill.activate(self.target_xy)
+        self.skill.perform(self.target_xy)
 
 
 class DropItem(ItemAction):

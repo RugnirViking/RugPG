@@ -877,7 +877,8 @@ class SkillListHandler(AskUserEventHandler):
         return super().ev_keydown(event)
     def on_skill_selected(self, skill: Skill) -> Optional[ActionOrHandler]:
         """Called when the user selects a valid item."""
-        return skill.action
+        action = skill.activate(self.engine)
+        return action
 
 
 class InventoryEventHandler(AskUserEventHandler):

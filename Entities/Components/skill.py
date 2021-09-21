@@ -4,12 +4,15 @@ from typing import Tuple, Optional, List, TYPE_CHECKING
 import tcod
 
 import actions
+from Entities.Components.ai import StunnedEnemy
 from Entities.entity import Actor
 from UI import color
 import actions
 import engine
+from exceptions import Impossible
 from input_handlers import SingleRangedAttackHandler
-
+if TYPE_CHECKING:
+    from engine import Engine
 
 class Base_Skill():
     def __init__(self,
@@ -86,13 +89,13 @@ class Skill(Base_Skill):
         raise NotImplementedError()
 
     def on_damaged(self, enemy: Actor,amount:int=0):
-        raise NotImplementedError()
+        pass
 
     def on_deal_damage(self, target: Actor, amount:int=0):
-        raise NotImplementedError()
+        pass
 
     def on_heal(self,amount):
-        raise NotImplementedError()
+        pass
 
     def on_gain_energy(self, amount_recovered):
         pass
@@ -120,9 +123,11 @@ class Skill(Base_Skill):
             n=2
         return n
 
-    def activate(self):
+    def activate(self,engine):
         pass
 
+    def perform(self,xy_coord):
+        pass
 
 class Skill_Charge(Skill):
     def __init__(self,
@@ -142,13 +147,64 @@ class Skill_Charge(Skill):
 
 
     def activate(self,engine):
-
+        self.engine=engine
         engine.message_log.add_message(
-            "Select a target location.", color.needs_target)
+            "Select a target location.", color.needs_target
+        )
         return SingleRangedAttackHandler(
             engine,
             callback=lambda xy: actions.SkillAction(self.entity, self, xy),
         )
+
+    def perform(self,xy_coord):
+        actor = self.engine.game_map.get_actor_at_location(xy_coord[0],xy_coord[1])
+
+        if not self.engine.player.fighter.energy>self.cost:
+            raise Impossible("You don't have enough energy to do that.")
+        if not self.engine.game_map.visible[xy_coord]:
+            raise Impossible("You cannot target an area that you cannot see.")
+        if not actor:
+            raise Impossible("You must select an enemy to target.")
+        if actor is self.engine.player:
+            raise Impossible("You can't charge at yourself, silly...")
+        player_skill=self.engine.player.skill_with_name(self.name)
+        spaces = 3
+        stun=1
+        if player_skill.level>=1:
+            stun=1
+        if player_skill.level>=2:
+            stun=2
+            spaces=3
+        if player_skill.level>=3:
+            spaces=4
+            stun=2
+        if player_skill.level>=4:
+            spaces=5
+            stun=3
+        if player_skill.level==player_skill.max_level:
+            spaces=7
+
+        max_distance = spaces
+        stun = stun
+        dx = xy_coord[0] - self.engine.player.x
+        dy = xy_coord[1] - self.engine.player.y
+        distance = max(abs(dx), abs(dy))  # Chebyshev distance. TODO: make this taxicab distance
+        if distance>max_distance:
+            raise Impossible(f"That enemy is too far away ({max_distance} range)")
+        else:
+            path = self.engine.player.ai.get_path_to(xy_coord[0],xy_coord[1])
+            dest_x, dest_y = path.pop(distance-2)
+
+            self.engine.message_log.add_message(
+                f"You charge at the {actor.name}, knocking into it violently and stunning it for {stun} turns!", color.skill_text
+            )
+            actor.ai=StunnedEnemy(actor,actor.ai,stun)
+            self.engine.player.fighter.energy-=self.cost
+            return actions.MovementAction(
+                self.engine.player, dest_x - self.engine.player.x, dest_y - self.engine.player.y,
+            ).perform()
+
+
 
     def render_description(self, x, y, width, height, console: tcod.Console, engine: engine.Engine):
         n=super().render_description(x,y,width,height,console,engine)
@@ -272,6 +328,41 @@ class Skill_Jump(Skill):
                  entity: Optional[Actor] = None):
         super().__init__(name, cost, max_level, char_string, x, y, color, unlocked_color, prerequisites, action, entity)
         self.active_skill=True
+        self.distance=0
+
+    def activate(self,engine):
+        self.engine=engine
+        engine.message_log.add_message(
+            "Select a target location.", color.needs_target
+        )
+        return SingleRangedAttackHandler(
+            engine,
+            callback=lambda xy: actions.SkillAction(self.entity, self, xy),
+        )
+
+    def perform(self,xy_coord):
+
+        if not self.engine.game_map.visible[xy_coord]:
+            raise Impossible("You cannot target an area that you cannot see.")
+        if xy_coord[0] == self.engine.player.x and xy_coord[1]==self.engine.player.y:
+            raise Impossible("You can't jump to the tile you are in!")
+        if self.engine.game_map.get_blocking_entity_at_location(*xy_coord):
+            raise Impossible("That tile is blocked")
+        player_skill=self.engine.player.skill_with_name(self.name)
+
+        max_distance = player_skill.distance
+        dx = xy_coord[0] - self.engine.player.x
+        dy = xy_coord[1] - self.engine.player.y
+        distance = max(abs(dx), abs(dy))  # Chebyshev distance. TODO: make this taxicab distance
+        if distance>max_distance:
+            raise Impossible(f"That tile is too far away ({max_distance} range)")
+        else:
+            path = self.engine.player.ai.get_path_to(xy_coord[0],xy_coord[1])
+            dest_x, dest_y = path.pop(distance-1)
+
+            return actions.MovementAction(
+                self.engine.player, dest_x - self.engine.player.x, dest_y - self.engine.player.y,
+            ).perform()
 
     def level_up(self,entity: Actor):
         up=super().level_up(entity)

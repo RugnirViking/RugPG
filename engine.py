@@ -23,6 +23,7 @@ from config import Config
 if TYPE_CHECKING:
     from Entities.entity import Actor
     from Map.game_map import GameMap, GameWorld
+    from Entities.Components.skill import Skill,SKILLS_LIST
 
 
 class Engine:
