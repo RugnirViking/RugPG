@@ -4,12 +4,12 @@ Rug's Rougelike Engine
 
 ![Screenshot of the game](https://github.com/RugnirViking/RugPG/blob/main/screenshot1.PNG)
 
-Thanks to: TStand90 for their excellent tutorial, plus the authors of libcotd, pygame (for sound) and easing-functions python libraries
+Thanks to: TStand90 for their excellent libcotd tutorial, plus the authors of libcotd, pygame (for sound) and easing-functions python libraries
 
 ## Features
  - Raycasting for visible tiles
  - Visible and remembered tiles colored nicely
- - Full lighting support with flickering effect when moving
+ - Full lighting support with flame flickering effect
 ![Screenshot of the game 2](https://github.com/RugnirViking/RugPG/blob/main/screenshot2.PNG)
  - Inventory and levelling system
  - Equipment, spell scrolls, potions
@@ -30,4 +30,5 @@ Controls:
  - '>' to go down stairs (must be standing on stairs) (shift + '.' or on danish keyboard shift + '<')
  - 'g' to pick up item (must be standing on item)
  - '/' or '-' to inspect objects (control cursor with wasd/arrow keys)
+ - 'j' to open skills menu
  - 'esc' to quit (game saved automatically)
