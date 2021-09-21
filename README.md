@@ -9,7 +9,7 @@ Thanks to: TStand90 for their excellent libcotd tutorial, plus the authors of li
 ## Features
  - Raycasting for visible tiles
  - Visible and remembered tiles colored nicely
- - Full lighting support with flickering effect when moving
+ - Full lighting support with flame flickering effect
 ![Screenshot of the game 2](https://github.com/RugnirViking/RugPG/blob/main/screenshot2.PNG)
  - Inventory and levelling system
  - Equipment, spell scrolls, potions
