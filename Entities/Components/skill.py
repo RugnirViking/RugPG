@@ -159,7 +159,7 @@ class Skill_Charge(Skill):
     def perform(self,xy_coord):
         actor = self.engine.game_map.get_actor_at_location(xy_coord[0],xy_coord[1])
 
-        if not self.engine.player.fighter.energy>self.cost:
+        if not self.engine.player.fighter.energy>=self.cost:
             raise Impossible("You don't have enough energy to do that.")
         if not self.engine.game_map.visible[xy_coord]:
             raise Impossible("You cannot target an area that you cannot see.")
@@ -342,6 +342,8 @@ class Skill_Jump(Skill):
 
     def perform(self,xy_coord):
 
+        if not self.engine.player.fighter.energy>=self.cost:
+            raise Impossible("You don't have enough energy to do that.")
         if not self.engine.game_map.visible[xy_coord]:
             raise Impossible("You cannot target an area that you cannot see.")
         if xy_coord[0] == self.engine.player.x and xy_coord[1]==self.engine.player.y:
@@ -359,6 +361,7 @@ class Skill_Jump(Skill):
         else:
             path = self.engine.player.ai.get_path_to(xy_coord[0],xy_coord[1])
             dest_x, dest_y = path.pop(distance-1)
+            self.engine.player.fighter.energy-=self.cost
 
             return actions.MovementAction(
                 self.engine.player, dest_x - self.engine.player.x, dest_y - self.engine.player.y,
