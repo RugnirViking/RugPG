@@ -3,6 +3,8 @@ from __future__ import annotations
 import random
 from typing import Tuple, TYPE_CHECKING
 
+import tcod.constants
+
 from UI import color
 
 if TYPE_CHECKING:
@@ -78,9 +80,33 @@ def render_dungeon_level(
     elif type=="special1":
         level_name="Winterfjell Deeps"
         x, y = location
+    elif type=="special2":
+        level_name="Gate"
+        x, y = location
+    else:
+        level_name="???"
+        x, y = location
 
     console.print(x=x, y=y, string=f"{dungeon_level}: {level_name}")
 
+
+def render_boss_hp(
+        console: Console, x: int, y: int, engine: Engine, boss:Actor
+) -> None:
+    from Entities.entity import Actor
+    total_width = console.width//2
+    bar_width = int(float(boss.fighter.hp) / boss.fighter.max_hp * total_width)
+
+    console.draw_rect(x=int(x-total_width/2), y=y, width=total_width, height=1, ch=1, bg=color.bar_empty)
+
+    if bar_width > 0:
+        console.draw_rect(
+            x=int(x-total_width/2), y=y, width=bar_width, height=1, ch=1, bg=color.bar_filled
+        )
+
+    console.print(
+        x=x, y=y, string=f"BOSS: {boss.name.upper()} | HP: {boss.fighter.hp}/{boss.fighter.max_hp}", fg=color.bar_text,alignment=tcod.constants.CENTER
+    )
 
 
 def render_names_at_mouse_location(

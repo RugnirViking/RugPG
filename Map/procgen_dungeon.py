@@ -30,7 +30,7 @@ max_monsters_by_floor = [
 
 item_chances: Dict[int, List[Tuple[Entity, int]]] = {
     0: [(entity_factories.health_potion, 35),(entity_factories.antivenom_potion, 10)],
-    1: [(entity_factories.confusion_scroll, 10),(entity_factories.antivenom_ring, 3)],
+    1: [(entity_factories.confusion_scroll, 10),(entity_factories.antivenom_ring, 2),(entity_factories.mana_ring, 2)],
     2: [(entity_factories.lightning_scroll, 10), (entity_factories.fireball_scroll, 10)],
     3: [(entity_factories.fear_scroll, 10),(entity_factories.blood_ring, 2)],
     4: [(entity_factories.charm_scroll, 5), (entity_factories.fireball_scroll, 25),
@@ -42,10 +42,10 @@ item_chances: Dict[int, List[Tuple[Entity, int]]] = {
 }
 
 enemy_chances: Dict[int, List[Tuple[Entity, int]]] = {
-    0: [(entity_factories.orc, 80),(entity_factories.mawrat, 40)],
-    2: [(entity_factories.mawrat, 120)],
-    3: [(entity_factories.troll, 15)],
-    5: [(entity_factories.troll, 30),(entity_factories.orc, 10),(entity_factories.mawrat, 20)],
+    0: [(entity_factories.orc, 80)],
+    2: [(entity_factories.mawrat, 40)],
+    3: [(entity_factories.troll, 15),(entity_factories.orc, 40)],
+    5: [(entity_factories.troll, 30),(entity_factories.orc, 10)],
     6: [(entity_factories.ice_golem, 10),(entity_factories.orc, 0)],
     7: [(entity_factories.troll, 60),(entity_factories.mawbeast, 10)],
     9: [(entity_factories.ice_golem, 60),(entity_factories.mawbeast, 30)],

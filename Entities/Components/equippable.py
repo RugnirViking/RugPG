@@ -62,6 +62,10 @@ class Sword(Equippable):
     def __init__(self) -> None:
         super().__init__(equipment_type=EquipmentType.WEAPON, power_bonus=4)
 
+class IceSword(Equippable):
+    def __init__(self) -> None:
+        super().__init__(equipment_type=EquipmentType.WEAPON, power_bonus=8)
+
 
 class LeatherArmor(Equippable):
     def __init__(self) -> None:

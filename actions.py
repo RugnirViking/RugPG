@@ -10,6 +10,7 @@ if TYPE_CHECKING:
     from engine import Engine
     from Entities.entity import Actor, Entity, Item
     from Entities.Components.skill import Skill
+    from Entities.Components.fighter import Reason
 
 
 class Action:
@@ -171,9 +172,9 @@ class ActionWithDirection(Action):
     def perform(self) -> None:
         raise NotImplementedError()
 
-
 class MeleeAction(ActionWithDirection):
     def perform(self) -> None:
+        from Entities.Components.fighter import Reason
         target = self.target_actor
         if not target:
             raise exceptions.Impossible("Nothing to attack.")
@@ -197,10 +198,34 @@ class MeleeAction(ActionWithDirection):
             attack_color = color.enemy_atk
 
         if damage > 0:
-            self.engine.message_log.add_message(
-                f"{attack_desc} for {int(damage)} hit points.", attack_color
-            )
-            target.fighter.melee_attack(int(damage), self.entity)
+            result = target.fighter.melee_attack(int(damage), self.entity)
+
+            reason=result[1]
+            if not reason==Reason.NONE:
+                if reason==Reason.DODGED:
+                    target.fighter.Dodge()
+                    if (target.name == "Player"):
+                        self.engine.message_log.add_message(
+                            f"You dodge an incoming attack from the {self.entity.name.capitalize()}", attack_color
+                        )
+                    else:
+                        self.engine.message_log.add_message(
+                            f"The {target.name.capitalize()} dodges an attack from the {self.entity.name.capitalize()}", attack_color
+                        )
+                elif reason==Reason.BLOCKED:
+                    if (target.name == "Player"):
+                        self.engine.message_log.add_message(
+                            f"You block the attack from the {self.entity.name.capitalize()} but take {result[0]}({int(damage)})", attack_color
+                        )
+                    else:
+                        self.engine.message_log.add_message(
+                            f"The {target.name.capitalize()} blocks the attack from the {self.entity.name.capitalize()} but takes {result[0]}({int(damage)})", attack_color
+                        )
+            else:
+                damage=result[0]
+                self.engine.message_log.add_message(
+                    f"{attack_desc} for {int(damage)} hit points.", attack_color
+                )
         else:
             self.engine.message_log.add_message(
                 f"{attack_desc} but does no damage.", attack_color
@@ -222,6 +247,11 @@ class MovementAction(ActionWithDirection):
         if self.engine.game_map.get_blocking_entity_at_location(dest_x, dest_y):
             # Destination is out of bounds.
             raise exceptions.Impossible("That way is blocked.")
+        tile_entities=self.engine.game_map.get_entities_at_location(dest_x, dest_y)
+        if tile_entities:
+            for entity in tile_entities:
+                if entity.trigger==True:
+                    entity.on_press(self.engine)
 
         self.entity.move(self.dx, self.dy)
 
@@ -240,6 +270,9 @@ class BumpAction(ActionWithDirection):
 
 
 class FreezeSpellAction(ActionWithDirection):
+    def __init__(self,entity,dx,dy,magnitude):
+        super().__init__(entity=entity,dx=dx,dy=dy)
+        self.magnitude=magnitude
 
     def perform(self) -> None:
         target = self.target_actor
@@ -275,13 +308,51 @@ class FreezeSpellAction(ActionWithDirection):
                 attack_color
             )
             target.fighter.take_damage(int(damage))
-            status = FrostShockStatus("Frost Shock", 1, target, 10)
+            status = FrostShockStatus("Frost Shock", self.magnitude, target, 10)
         else:
             self.engine.message_log.add_message(
                 f"{attack_desc} but does no damage. However, {target_desc} {target_desc3} colder and ice spikes "
                 f"begin to pierce {target_desc2} skin...", attack_color
             )
             status = FrostShockStatus("Frost Shock", 1, target, 5)
+
+class DrainSpellAction(ActionWithDirection):
+    def __init__(self,entity,dx,dy,magnitude):
+        super().__init__(entity=entity,dx=dx,dy=dy)
+        self.magnitude=magnitude
+    def perform(self) -> None:
+        target = self.target_actor
+        if not target and self.entity.name == "Player":
+            raise exceptions.Impossible("Nothing to attack.")
+        drain=self.magnitude
+        if target.fighter.energy<self.magnitude:
+            drain=target.fighter.energy
+
+        attack_desc = ""
+        target_desc = ""
+        target_desc2 = ""
+        target_desc3 = ""
+        if (target.name == "Player"):
+            attack_desc = f"{self.entity.name.capitalize()} casts Drain on you"
+            target_desc = "you"
+            target_desc2 = "your"
+            target_desc3 = "grow"
+        else:
+            attack_desc = f"{self.entity.name.capitalize()} casts Drain at the {target.name.capitalize()}"
+            target_desc = f"the {target.name.capitalize()}"
+            target_desc2 = f"the {target.name.capitalize()}'s"
+            target_desc3 = "grows"
+
+        if self.entity is self.engine.player:
+            attack_color = color.player_atk
+        else:
+            attack_color = color.enemy_atk
+
+        self.engine.message_log.add_message(
+                f"{attack_desc}, siphoning {drain} energy",
+                attack_color
+        )
+        target.fighter.energy=max(0,target.fighter.energy-5)
 
 class MawSpellAction(ActionWithDirection):
     def __init__(self,entity,dx,dy,magnitude):

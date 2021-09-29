@@ -7,7 +7,8 @@ import numpy as np  # type: ignore
 import tcod
 
 from UI import color
-from actions import Action, BumpAction, MeleeAction, MovementAction, WaitAction, FreezeSpellAction, MawSpellAction
+from actions import Action, BumpAction, MeleeAction, MovementAction, WaitAction, FreezeSpellAction, MawSpellAction, \
+    DrainSpellAction
 
 if TYPE_CHECKING:
     from Entities.entity import Actor
@@ -92,7 +93,7 @@ class IceSpellEnemy(HostileEnemy):
 
     def attack_action(self, distance, dx, dy, target=None) -> None:
         if distance <= self.range and not any(x.name == "Frost Shock" for x in target.status_effects):
-            return FreezeSpellAction(self.entity, dx, dy).perform()
+            return FreezeSpellAction(self.entity, dx, dy, 1).perform()
         elif distance <= 1:
             return MeleeAction(self.entity, dx, dy).perform()
 
@@ -109,6 +110,47 @@ class IceSpellEnemy(HostileEnemy):
 
             self.path = self.get_path_to(target.x, target.y)
 
+        if distance < self.MAX_DISTANCE and self.path:
+            dest_x, dest_y = self.path.pop(0)
+            return MovementAction(
+                self.entity, dest_x - self.entity.x, dest_y - self.entity.y,
+            ).perform()
+
+        return WaitAction(self.entity).perform()
+
+
+class IceSentryBossEnemy(HostileEnemy):
+    MAX_DISTANCE = 12
+
+    def __init__(self, entity: Actor, range: int = 5):
+        super().__init__(entity)
+        self.range = range
+        self.drain_cooldown=0
+
+    def attack_action(self, distance, dx, dy, target=None) -> None:
+        if distance <= self.range and not any(x.name == "Frost Shock" for x in target.status_effects):
+            return FreezeSpellAction(self.entity, dx, dy, 2).perform()
+        if distance <= 1 and self.engine.player.fighter.power > 5 and self.drain_cooldown==0:
+            self.drain_cooldown=5
+            return DrainSpellAction(self.entity, dx, dy, 5).perform()
+        elif distance <= 1:
+            return MeleeAction(self.entity, dx, dy).perform()
+
+    def perform(self) -> None:
+        target = self.engine.player
+
+        dx = target.x - self.entity.x
+        dy = target.y - self.entity.y
+        distance = max(abs(dx), abs(dy))  # Chebyshev distance. TODO: make this taxicab distance
+
+        if self.engine.game_map.visible[self.entity.x, self.entity.y] and distance < self.MAX_DISTANCE:
+            a = self.attack_action(distance, dx, dy, target)
+            if a:
+                return a
+
+            self.path = self.get_path_to(target.x, target.y)
+        if self.drain_cooldown>0:
+            self.drain_cooldown-=1
         if distance < self.MAX_DISTANCE and self.path:
             dest_x, dest_y = self.path.pop(0)
             return MovementAction(
@@ -196,6 +238,7 @@ class PlayerAI(BaseAI):
         # todo player stuff here
         pass
 
+
 class StunnedEnemy(BaseAI):
     """
     A stunned enemy waits in place until it is no longer stunned.
@@ -219,6 +262,7 @@ class StunnedEnemy(BaseAI):
         else:
             self.turns_remaining -= 1
             return WaitAction(self.entity).perform()
+
 
 class ConfusedEnemy(BaseAI):
     """

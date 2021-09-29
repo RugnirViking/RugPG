@@ -37,13 +37,19 @@ def draw_skill(console, engine: Engine, y_offset, skill, selected=False):
 
 
 def render_skills(console: tcod.Console, engine: Engine, y_offset, selected_skill_index):
-    from Entities.Components.skill import FS_CONNECTORS_LIST, BS_CONNECTORS_LIST
+    from Entities.Components.skill import FS_CONNECTORS_LIST, BS_CONNECTORS_LIST, VS_CONNECTORS_LIST
     player = engine.player
     BOTTOM_BOX_HEIGHT = 15
     y_offset = -y_offset
     for i, skill in enumerate(engine.skills_list):
         if skill.y + y_offset + 2 > -4:
             draw_skill(console, engine, y_offset + 2, skill, selected_skill_index == i)
+
+    for pos in VS_CONNECTORS_LIST:
+        if pos[1] + y_offset + 1 > -4:
+            console.print(
+                pos[0], pos[1] + y_offset + 1, "|", fg=color.unselected_skill
+            )
 
     for pos in FS_CONNECTORS_LIST:
         if pos[1] + y_offset + 1 > -4:

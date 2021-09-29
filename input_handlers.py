@@ -243,6 +243,10 @@ class MainGameEventHandler(EventHandler):
                     self.engine,
                     callback=lambda xy: actions.TeleportAction(player, xy),
                 )
+            elif key == tcod.event.K_COMMA:
+                self.engine.player.level.current_xp=self.engine.player.level.experience_to_next_level+1
+            elif key == tcod.event.K_PERIOD:
+                self.engine.player.skill_points=99
 
         # No valid key was pressed
         return action
@@ -333,10 +337,11 @@ class HistoryViewer(EventHandler):
 class PopupMessage(BaseEventHandler):
     """Display a popup text window."""
 
-    def __init__(self, parent_handler: BaseEventHandler, text: str, title: str = "Information", text_color=color.white):
+    def __init__(self, parent_handler: BaseEventHandler, text: str, title: str = "Information", text_color=color.white,side_offset: int=10):
         self.parent = parent_handler
         self.text = text
         self.title = title
+        self.side_offset=side_offset
         self.text_color = text_color
 
     def on_render(self, console: tcod.Console) -> None:
@@ -345,10 +350,12 @@ class PopupMessage(BaseEventHandler):
         console.tiles_rgb["fg"] //= 8
         console.tiles_rgb["bg"] //= 8
 
-        console.print(
-            console.width // 2,
-            console.height // 2,
-            self.text,
+        console.print_box(
+            self.side_offset,
+            self.side_offset+10,
+            width=console.width-self.side_offset*2,
+            height=console.height-self.side_offset*2,
+            string=self.text,
             fg=self.text_color,
             bg=color.black,
             alignment=tcod.CENTER,
@@ -356,6 +363,8 @@ class PopupMessage(BaseEventHandler):
 
     def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[BaseEventHandler]:
         """Any key returns to the parent handler."""
+        if event.sym in MOVE_KEYS:
+            return
         return self.parent
 
 
@@ -477,7 +486,7 @@ class LevelUpEventHandler(AskUserEventHandler):
             x=x,
             y=0,
             width=45,
-            height=8,
+            height=9,
             title=self.TITLE,
             clear=True,
             fg=(255, 255, 255),
@@ -485,22 +494,23 @@ class LevelUpEventHandler(AskUserEventHandler):
         )
 
         console.print(x=x + 1, y=1, string="Congratulations! You have leveled up!")
-        console.print(x=x + 1, y=2, string="Select an attribute to increase.")
+        console.print(x=x + 1, y=2, string="You received 2 skill points to spend.")
+        console.print(x=x + 1, y=3, string="Select an attribute to increase.")
 
         console.print(
             x=x + 1,
-            y=4,
-            string=f"a) Constitution (+20 Max HP, from {self.engine.player.fighter.max_hp})",
-        )
-        console.print(
-            x=x + 1,
             y=5,
-            string=f"b) Strength (+1 attack, from {self.engine.player.fighter.power})",
+            string=f"b) Constitution (+20 Max HP, from {self.engine.player.fighter.max_hp})",
         )
         console.print(
             x=x + 1,
             y=6,
-            string=f"c) Agility (+1 defense, from {self.engine.player.fighter.defense})",
+            string=f"c) Strength (+1 attack, from {self.engine.player.fighter.power})",
+        )
+        console.print(
+            x=x + 1,
+            y=7,
+            string=f"d) Agility (+1 defense, from {self.engine.player.fighter.defense})",
         )
 
     def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[ActionOrHandler]:
@@ -508,13 +518,14 @@ class LevelUpEventHandler(AskUserEventHandler):
         key = event.sym
         index = key - tcod.event.K_a
 
-        if 0 <= index <= 2:
-            if index == 0:
+        if 1 <= index <= 3:
+            if index == 1:
                 player.level.increase_max_hp()
-            elif index == 1:
+            elif index == 2:
                 player.level.increase_power()
             else:
                 player.level.increase_defense()
+            player.skill_points+=2
         else:
             self.engine.message_log.add_message("Invalid entry.", color.invalid)
 
@@ -806,16 +817,12 @@ class SkillTreeHandler(AskUserEventHandler):
 
 class SkillListHandler(AskUserEventHandler):
     """This handler lets the user select a skill.
-
-    What happens then depends on the subclass.
     """
 
     TITLE = "Skills Menu"
 
     def on_render(self, console: tcod.Console) -> None:
-        """Render an inventory menu, which displays the items in the inventory, and the letter to select them.
-        Will move to a different position based on where the player is located, so the player can always see where
-        they are.
+        """ Render a list of skills
         """
         super().on_render(console)
         number_of_skills = len(self.engine.player.skills)
@@ -850,9 +857,12 @@ class SkillListHandler(AskUserEventHandler):
                 item_key = chr(ord("a") + i)
 
                 item_string = f"{skill.name}"
-
-                console.print(x+1,y+i+1,f"({item_key}) ",color.white)
-                console.print(x + 5, y + i + 1, item_string, fg=color.white)
+                if self.engine.player.fighter.energy>=skill.cost:
+                    console.print(x+1,y+i+1,f"({item_key}) ",color.white)
+                    console.print(x + 5, y + i + 1, item_string, fg=color.white)
+                else:
+                    console.print(x+1,y+i+1,f"({item_key}) ",color.item_junk)
+                    console.print(x + 5, y + i + 1, item_string, fg=color.item_junk)
                 num=i+1
         else:
             console.print(x + 1, y + 1, "(Empty)")

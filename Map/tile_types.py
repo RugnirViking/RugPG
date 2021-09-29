@@ -113,6 +113,24 @@ pillar = new_tile(
     dark=(ord("0"), (75, 0, 150), (37, 0, 75)),
     light=(ord("0"), (255, 255, 255), (150, 150, 150)),
 )
+door = new_tile(
+    walkable=False,
+    transparent=False,
+    dark=(ord("╫"), (75, 0, 150), (37, 0, 75)),
+    light=(ord("╫"), (250, 250, 250), (100, 100, 100)),
+)
+door_floor = new_tile(
+    walkable=True,
+    transparent=True,
+    dark=(ord("+"), (50, 35, 76), (0, 0, 0)),
+    light=(ord("+"), (150, 150, 150), (0, 0, 0)),
+)
+floor_hidden_wall = new_tile(
+    walkable=False,
+    transparent=False,
+    dark=(ord("="), (75, 0, 151), (37, 0, 75)),
+    light=(ord("="), (255, 255, 255), (180, 180, 180)),
+)
 down_stairs = new_tile(
     walkable=True,
     transparent=True,

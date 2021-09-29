@@ -47,6 +47,7 @@ class GameMap:
         self, engine: Engine, width: int, height: int, entities: Iterable[Entity] = ()
     ):
         self.engine = engine
+        self.door_open=False
         self.width, self.height = width, height
         self.entities = set(entities)
         self.tiles = np.full((width, height), fill_value=tile_types.wall, order="F")
@@ -94,6 +95,14 @@ class GameMap:
                 return entity
 
         return None
+
+    def get_entities_at_location(self, location_x: int, location_y: int) -> Optional[Entity]:
+        entities=[]
+        for entity in self.entities:
+            if entity.x == location_x and entity.y == location_y:
+                entities.append(entity)
+
+        return entities
 
     def remove_entities_at_location(self, location_x: int, location_y: int) -> Optional[Entity]:
         for entity in self.entities.copy():
@@ -206,6 +215,7 @@ class GameMap:
                         self.explored[i, j] = True
 
 
+
 class GameWorld:
     """
     Holds the settings for the GameMap, and generates new maps when moving down the stairs.
@@ -226,7 +236,6 @@ class GameWorld:
 
         self.map_width = map_width
         self.map_height = map_height
-
         self.max_rooms = max_rooms
 
         self.room_min_size = room_min_size
@@ -240,6 +249,11 @@ class GameWorld:
         self.current_floor += 1
         random.seed()
         n=random.random()
+        if self.current_floor==10:
+            print("why",self.current_floor)
+            self.load_floor("boss1.csv")
+            self.engine.player.fighter.energy=self.engine.player.fighter.max_energy
+            return
 
         if n<0.5:
             self.engine.game_map = generate_cave2(
@@ -281,6 +295,62 @@ class GameWorld:
 
         self.engine.player.fighter.energy=self.engine.player.fighter.max_energy
 
+    def load_floor(self,filename:str) -> None:
+        player = self.engine.player
+        dungeon = GameMap(self.engine, self.map_width, self.map_height, entities=[player])
+
+        self.current_floor_type="special2"
+
+        with open(filename, newline='') as csvfile:
+            spamreader = csv.reader(csvfile, delimiter=',', quotechar='|')
+            y=0
+            x=0
+            for row in spamreader:
+                for tile in row:
+                    if tile=="+":
+                        dungeon.tiles[x, y] = tile_types.floor
+                    if tile=="s":
+                        entity_factories.statue.spawn(dungeon, x, y)
+                        dungeon.tiles[x, y] = tile_types.floor
+                    if tile=="f":
+                        entity_factories.torch.spawn(dungeon, x, y)
+                        dungeon.tiles[x, y] = tile_types.floor
+                    if tile=="v":
+                        entity_factories.candles.spawn(dungeon, x, y)
+                        dungeon.tiles[x, y] = tile_types.floor
+                    if tile=="c":
+                        entity_factories.chair.spawn(dungeon, x, y)
+                        boss=entity_factories.ice_sentry_boss.spawn(dungeon, x, y)
+                        self.engine.boss=boss
+                        dungeon.tiles[x, y] = tile_types.floor
+                    if tile=="t":
+                        entity_factories.stone_plate.spawn(dungeon, x, y)
+                        dungeon.tiles[x, y] = tile_types.floor
+                    elif tile=="#":
+                        dungeon.tiles[x, y] = tile_types.wall
+                    elif tile=="0":
+                        dungeon.tiles[x, y] = tile_types.pillar
+                    elif tile=="2":
+                        entity_factories.hidden_door_shut_trigger.spawn(dungeon, x, y)
+                        dungeon.tiles[x, y] = tile_types.floor
+                    elif tile=="3":
+                        dungeon.tiles[x, y] = tile_types.floor_hidden_wall
+                    elif tile=="d":
+                        dungeon.tiles[x, y] = tile_types.door
+                    elif tile==">":
+                        dungeon.tiles[x, y] = tile_types.down_stairs
+                        dungeon.downstairs_location = (x,y)
+                    elif tile=="l":
+                        entity_factories.ice_shard.spawn(dungeon, x, y)
+                        dungeon.tiles[x, y] = tile_types.floor
+                    elif tile=="p":
+                        dungeon.tiles[x, y] = tile_types.floor
+                        player.place(*(x,y), dungeon)
+                    x=x+1
+                x=0
+                y=y+1
+
+        self.engine.game_map = dungeon
     def load_surface(self,filename:str) -> None:
         player = self.engine.player
         dungeon = GameMap(self.engine, self.map_width, self.map_height, entities=[player])

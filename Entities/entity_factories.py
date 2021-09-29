@@ -1,11 +1,12 @@
-from Entities.Components.ai import HostileEnemy, PlayerAI, IceSpellEnemy, RatMunchEnemy, BeastMunchEnemy
+from Entities.Components.ai import HostileEnemy, PlayerAI, IceSpellEnemy, RatMunchEnemy, BeastMunchEnemy, \
+    IceSentryBossEnemy
 from Entities.Components import consumable, equippable
 from Entities.Components.equipment import Equipment
 from Entities.Components.fighter import Fighter
 from Entities.Components.inventory import Inventory
 from Entities.Components.level import Level
 from Entities.Components.rarities import Rarity
-from Entities.entity import Actor, Item, Entity
+from Entities.entity import Actor, Item, Entity, PlateEntity, DoorShutTriggerEntity
 
 #####################
 #   Actors/Mobs     #
@@ -22,7 +23,7 @@ player = Actor(
     name="Player",
     ai_cls=PlayerAI,
     equipment=Equipment(),
-    fighter=Fighter(hp=30, base_defense=1, base_power=2),
+    fighter=Fighter(hp=50, base_defense=1, base_power=2),#fighter=Fighter(hp=30, base_defense=1, base_power=2),
     inventory=Inventory(capacity=26),
     level=Level(level_up_base=200),
     emits_light=True,
@@ -81,6 +82,17 @@ mawbeast = Actor( # it knows more...
     level=Level(xp_given=150),
 )
 
+ice_sentry_boss = Actor( # monstrous but good in a drink
+    char="S",
+    color=(0, 156, 226),
+    name="Ice Golem",
+    ai_cls=IceSentryBossEnemy,
+    equipment=Equipment(),
+    fighter=Fighter(hp=150, base_defense=4, base_power=10, will_chance=1.0),
+    inventory=Inventory(capacity=0),
+    level=Level(xp_given=1200),
+    is_boss=True,
+)
 
 ###########################
 #       Furniture         #
@@ -101,6 +113,18 @@ tree = Entity(
     color=(50, 150, 50),
     name="A hardy evergreen tree",
     blocks_movement=True
+)
+stone_plate = PlateEntity(
+    char="■",
+    color=(150, 150, 150),
+    name="A smooth stone plate",
+    blocks_movement=False
+)
+hidden_door_shut_trigger = DoorShutTriggerEntity(
+    char="",
+    color=(150, 150, 150),
+    name="",
+    blocks_movement=False
 )
 cave_plant = Entity(
     char=":",
@@ -326,13 +350,23 @@ dagger = Item(
 
 sword = Item(
     char="/",
-    color=(0, 191, 255),
+    color=(255, 191, 255),
     name="Sword",
     equippable=equippable.Sword(),
     rarity=Rarity.COMMON,
     description="This is a fine sword of the type used by soldiers of the duke. You're not quite sure how it got all "
                 "the way down here - perhaps it was dropped by the last unlucky soul to try adventuring around here. "
                 "Still, its a good weapon, and longer than a dagger"
+)
+
+ice_shard = Item(
+    char="/",
+    color=(140, 191, 255),
+    name="Icerend",
+    equippable=equippable.IceSword(),
+    rarity=Rarity.RARE,
+    description="This terrible sword, made from dwarven steel, is inset with cursed magical runes. It causes anyone "
+                "struck by it to become terribly cold (10% chance on hit: inflict frost shock status)"
 )
 
 leather_armor = Item(

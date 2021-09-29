@@ -1,9 +1,10 @@
 import random
-from typing import Tuple, Optional
+from typing import Tuple, Optional, Union
 
 from Entities.entity import Actor
 from UI import color
 
+IntOrBool = Union[int, bool]
 class StatusEffect:
     def __init__(self,
                  name: str,
@@ -16,6 +17,7 @@ class StatusEffect:
                  curse: bool=False,
                  magic: bool=False,
                  ):
+        from Entities.Components.fighter import Reason
         self.name=name
         self.magnitude=magnitude
         self.duration=duration
@@ -25,6 +27,7 @@ class StatusEffect:
         self.poison=poison
         self.magic=magic
         self.curse=curse
+        self.reason=Reason.NONE
         if entity:
             self.apply(self.entity)
 
@@ -50,8 +53,8 @@ class StatusEffect:
             if self.duration==0:
                 self.expire(False)
 
-    def on_damaged(self, enemy: Actor,amount:int=0):
-        pass
+    def on_damaged(self, enemy: Actor,amount:int=0)->IntOrBool:
+        return -1
 
     def on_deal_damage(self, target: Actor, amount:int=0):
         pass
@@ -125,6 +128,25 @@ class AntivenomImmunityEffect(StatusEffect):
         super().expire(resisted)
         self.entity.fighter.poison_resist_base-=self.magnitude
 
+class AntivenomImmunityEffect(StatusEffect):
+    def __init__(self,
+                 name: str,
+                 magnitude: float,
+                 entity: Actor,
+                 duration: int=0,
+                 bg: Tuple[int, int, int] = (55, 125, 55),
+                 fg: Tuple[int, int, int] = (155, 225, 155),
+                 ):
+        super().__init__(name,magnitude,entity,duration,bg=bg,fg=fg)
+
+    def apply(self,entity: Actor):
+        super().apply(entity)
+        self.entity.fighter.poison_resist_base+=self.magnitude
+
+    def expire(self,resisted=False):
+        super().expire(resisted)
+        self.entity.fighter.poison_resist_base-=self.magnitude
+
 class VampirismStatusEffect(StatusEffect):
     def __init__(self,
                  name: str,
@@ -145,6 +167,23 @@ class VampirismStatusEffect(StatusEffect):
                 fg=color.health_recovered_effect
             )
 
+class BlockStatusEffect(StatusEffect):
+    def __init__(self,
+                 name: str,
+                 magnitude: float,
+                 entity: Optional[Actor],
+                 duration: int=0,
+                 bg: Tuple[int, int, int] = (125, 55, 55),
+                 fg: Tuple[int, int, int] = (0, 0, 0),
+                 curse:bool=True
+                 ):
+        from Entities.Components.fighter import Reason
+        super().__init__(name,magnitude,entity,duration,bg=bg,fg=fg,curse=True)
+        self.reason=Reason.BLOCKED
+
+    def on_damaged(self, enemy: Actor, amount:int=0)->IntOrBool:
+        print("blockdmg",amount,amount*self.magnitude)
+        return int(amount-amount*self.magnitude)
 
 class MawSiphonStatus(StatusEffect):
     def __init__(self,

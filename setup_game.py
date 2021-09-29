@@ -27,7 +27,7 @@ background_image = tcod.image.load("menu_background.png")[:, :, :3]
 
 majorversion = 0
 minorversion = 1
-buildversion = 6
+buildversion = 7
 
 def new_game(config: Config) -> Engine:
     """Return a brand new game session as an Engine instance."""
@@ -72,7 +72,7 @@ def new_game(config: Config) -> Engine:
 
     dagger = copy.deepcopy(entity_factories.dagger)
     leather_armor = copy.deepcopy(entity_factories.leather_armor)
-    ring = copy.deepcopy(entity_factories.mana_ring)
+    ring = copy.deepcopy(entity_factories.cross_ring)
 
     dagger.parent = player.inventory
     leather_armor.parent = player.inventory

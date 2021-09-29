@@ -6,6 +6,9 @@ from typing import Optional, Tuple, Type, TypeVar, TYPE_CHECKING, Union, List
 
 from Entities.Components.rarities import Rarity
 from Entities.render_order import RenderOrder
+from Map import tile_types
+from UI import color
+from engine import Engine
 
 if TYPE_CHECKING:
     from Components.ai import BaseAI
@@ -50,6 +53,7 @@ class Entity:
         self.blocks_movement = blocks_movement
         self.render_order = render_order
         self.emits_light = emits_light
+        self.trigger=False
         self.light_level=light_level
 
         if parent:
@@ -92,6 +96,91 @@ class Entity:
         self.x += dx
         self.y += dy
 
+    def on_press(self,engine:Engine):
+        pass
+
+class PlateEntity(Entity):
+
+
+    def __init__(
+            self,
+            parent: Optional[GameMap] = None,
+            x: int = 0,
+            y: int = 0,
+            char: str = "?",
+            color: Tuple[int, int, int] = (255, 255, 255),
+            name: str = "<Unnamed>",
+            blocks_movement: bool = False,
+            render_order: RenderOrder = RenderOrder.CORPSE,
+            emits_light: bool = False,
+            light_level: int = 0,
+    ):
+        super().__init__(
+            x=x,
+            y=y,
+            char=char,
+            color=color,
+            name=name,
+            blocks_movement=blocks_movement,
+            render_order=render_order,
+            emits_light=emits_light,
+            light_level=light_level,
+        )
+        self.trigger=True
+
+    def on_press(self,engine:Engine):
+        if not self.gamemap.door_open:
+            for x in range(1, self.gamemap.width - 1):
+                for y in range(1, self.gamemap.height - 1):
+                    if self.gamemap.tiles[x,y] == tile_types.door:
+                        self.gamemap.tiles[x, y] = tile_types.door_floor
+            self.gamemap.door_open=True
+            text="As you step onto the plate, the great stone door opens up revealing a lavish well-lit room"
+            engine.popup_message(title="Reveal",message=text,side_offset=15,textcolor=color.boss)
+            engine.message_log.add_message(text=text,fg=color.boss_subtle)
+
+
+class DoorShutTriggerEntity(Entity):
+
+    def __init__(
+            self,
+            parent: Optional[GameMap] = None,
+            x: int = 0,
+            y: int = 0,
+            char: str = "?",
+            color: Tuple[int, int, int] = (255, 255, 255),
+            name: str = "<Unnamed>",
+            blocks_movement: bool = False,
+            render_order: RenderOrder = RenderOrder.CORPSE,
+            emits_light: bool = False,
+            light_level: int = 0,
+    ):
+        super().__init__(
+            x=x,
+            y=y,
+            char=char,
+            color=color,
+            name=name,
+            blocks_movement=blocks_movement,
+            render_order=render_order,
+            emits_light=emits_light,
+            light_level=light_level,
+        )
+        self.trigger = True
+
+    def on_press(self,engine:Engine):
+        if self.gamemap.door_open:
+            print("door shut")
+            for x in range(1, self.gamemap.width - 1):
+                for y in range(1, self.gamemap.height - 1):
+                    if self.gamemap.tiles[x,y] == tile_types.door_floor:
+                        self.gamemap.tiles[x, y] = tile_types.door
+            self.gamemap.door_open=False
+            text="The great stone door closes behind you. There's no way back now."
+            engine.popup_message(title="Trapped",message=text,side_offset=15,textcolor=color.boss)
+            engine.message_log.add_message(text=text,fg=color.boss_subtle)
+            engine.hasBoss=True
+            engine.play_song("viking2.mp3")
 
 class Actor(Entity):
     def __init__(
@@ -111,6 +200,7 @@ class Actor(Entity):
             light_level: int = 0,
             skills:List[Skill] = None,
             skill_points:int=0,
+            is_boss:bool=False,
     ):
         super().__init__(
             x=x,
@@ -123,6 +213,7 @@ class Actor(Entity):
             emits_light=emits_light,
             light_level=light_level,
         )
+        self.is_boss=is_boss
 
         self.ai: Optional[BaseAI] = ai_cls(self)
 
@@ -139,6 +230,7 @@ class Actor(Entity):
         self.level.parent = self
         self.status_effects: List[status_effects.StatusEffect] = []
         self.skills = skills
+
         if not skills:
             self.skills: List[Skill] = []
 
@@ -148,6 +240,12 @@ class Actor(Entity):
         for skill in self.skills:
             if skill.name==skill_name:
                 return skill
+        return False
+
+    def status_with_name(self,status_name):
+        for status in self.status_effects:
+            if status.name==status_name:
+                return status
         return False
 
     @property

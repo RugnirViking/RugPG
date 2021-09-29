@@ -55,3 +55,9 @@ requirement_yes=(150, 255, 150)
 requirement_no=(255, 150, 150)
 
 skill_text=(50,255,205)
+
+
+block_status_bg=(180,180,180)
+block_status_fg=(70,70,155)
+boss=(255,0,90)
+boss_subtle=(127,0,45)

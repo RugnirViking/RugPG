@@ -7,11 +7,17 @@ from Entities.Components.base_component import BaseComponent
 from UI import color
 from Entities.render_order import RenderOrder
 
-from typing import TYPE_CHECKING
-
+from typing import TYPE_CHECKING, Tuple
+from enum import auto, Enum
 
 if TYPE_CHECKING:
     from Entities.entity import Actor
+
+
+class Reason(Enum):
+    NONE = auto()
+    BLOCKED = auto()
+    DODGED = auto()
 
 
 class Fighter(BaseComponent):
@@ -168,14 +174,25 @@ class Fighter(BaseComponent):
     def take_damage(self, amount: int) -> None:
         self.hp -= amount
 
-    def melee_attack(self, damage, entity):
-        self.take_damage(damage)
-
+    def melee_attack(self, damage, entity) -> Tuple[int,Reason]:
+        reason=Reason.NONE
         for effect in self.parent.status_effects:
-            effect.on_damaged(entity,damage)
+            new_damage=effect.on_damaged(entity,damage)
+            if new_damage is not None:
+                if new_damage>-1:
+                    damage=new_damage
+                    reason=effect.reason
 
         for skill in self.parent.skills:
-            skill.on_damaged(entity,damage)
+            new_damage=skill.on_damaged(entity,damage)
+            if new_damage:
+                if new_damage>-1:
+                    damage=new_damage
+                else:
+                    damage=0
+                    reason=skill.reason
+
+        self.take_damage(damage)
 
         n=random.random()
         if self.hp<self.max_hp/3 and n>self.will_chance and self.parent.is_alive:
@@ -186,6 +203,9 @@ class Fighter(BaseComponent):
             self.parent.ai = FearedEnemy(
                 entity=self.parent, previous_ai=self.parent.ai, turns_remaining=99, fear_source=entity,
             )
+        if not reason:
+            reason=Reason.NONE
+        return [damage,reason]
 
     def gain_energy(self, mana_amount):
         if self.energy == self.max_energy_bonus:
@@ -215,3 +235,10 @@ class Fighter(BaseComponent):
             else:
                 self.gain_energy(1)
                 self.tick_counter=0
+
+    def Dodge(self):
+        result = False
+        for skill in self.parent.skills:
+            if skill.name=="Dodge" and skill.level>0:
+                result = skill.dodge(self.parent,self.engine)
+        return result
