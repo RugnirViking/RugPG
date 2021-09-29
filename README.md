@@ -14,10 +14,12 @@ Thanks to: TStand90 for their excellent libcotd tutorial, plus the authors of li
  - Inventory and levelling system
  - Equipment, spell scrolls, potions
  - Background Music 
+ - Skill Trees
+![Screenshot of the game 3 - skill tree menu](https://github.com/RugnirViking/RugPG/blob/main/screenshot4.PNG)
  - Tile inspector 
  - Saving and loading allows for continuing runs later - game autosaves on program exit
  - Permadeath: save is deleted upon death
-![Screenshot of the game 3](https://github.com/RugnirViking/RugPG/blob/main/screenshot3.PNG)
+![Screenshot of the game 4](https://github.com/RugnirViking/RugPG/blob/main/screenshot3.PNG)
 
 Controls:
  - wasd/arrow keys for movement
