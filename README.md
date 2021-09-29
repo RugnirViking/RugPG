@@ -23,7 +23,8 @@ Controls:
  - wasd/arrow keys for movement
  - numpad also supported - allows diagonal movement
  - space bar to wait in place
- - 'i' to inspect inventory
+ - 'i' to view inventory
+ - shift + 'i' to inspect an item in inventory
  - 'p' to drop an item
  - 'c' to inspect character stats and check xp
  - 'v' to view message history
@@ -31,4 +32,15 @@ Controls:
  - 'g' to pick up item (must be standing on item)
  - '/' or '-' to inspect objects (control cursor with wasd/arrow keys)
  - 'j' to open skills menu
+ - enter to select menu item/tile
  - 'esc' to quit (game saved automatically)
+<details>
+<summary><b>Debug Commands (Cheating!)</b></summary>
+Debug commands must be turned on in options screen from the main menu to work.
+ 
+ - 'o' makes the player confused for 10 turns. Used for testing ai-replacing spells on the player
+ - 'l' instant reveals the map
+ - 'k' teleports to selected tile
+ - ',' (comma) levels up the player
+ - '.' (period) gives the player 99 skill points 
+</details>
