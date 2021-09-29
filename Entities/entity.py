@@ -176,7 +176,7 @@ class DoorShutTriggerEntity(Entity):
                     if self.gamemap.tiles[x,y] == tile_types.door_floor:
                         self.gamemap.tiles[x, y] = tile_types.door
             self.gamemap.door_open=False
-            text="The great stone door closes behind you. There's no way back now."
+            text="A beast made from enchanted ice stands up with unnatural-seeming movements from a throne opposite you. The great stone door closes behind you. There's no way back now."
             engine.popup_message(title="Trapped",message=text,side_offset=15,textcolor=color.boss)
             engine.message_log.add_message(text=text,fg=color.boss_subtle)
             engine.hasBoss=True

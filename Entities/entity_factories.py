@@ -85,7 +85,7 @@ mawbeast = Actor( # it knows more...
 ice_sentry_boss = Actor( # monstrous but good in a drink
     char="S",
     color=(0, 156, 226),
-    name="Ice Golem",
+    name="Ice Sentry",
     ai_cls=IceSentryBossEnemy,
     equipment=Equipment(),
     fighter=Fighter(hp=150, base_defense=4, base_power=10, will_chance=1.0),

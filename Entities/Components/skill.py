@@ -164,8 +164,7 @@ class Skill_Mana(Skill):
         n=super().render_description(x,y,width,height,console,engine)
         console.print_box(x, y-1, width, height,
                           f"Passive Skill",alignment=tcod.CENTER,fg=color.passive_skill)
-        if self.level==0:
-            console.print_box(x,y+n,width,height,f"Tap into the magic forces that flow through the frigid air under the dread mountain (Increases max energy by 10)")
+        console.print_box(x,y+n,width,height,f"Tap into the magic forces that flows through the frigid air under the dread mountain (Increases max energy by 10)")
 
 class Skill_Charge(Skill):
     def __init__(self,

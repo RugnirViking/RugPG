@@ -93,21 +93,36 @@ class FrostShockStatus(StatusEffect):
         super().tick()
         if self.duration%2==0:
             if self.entity.fighter:
-                self.entity.gamemap.engine.message_log.add_message(
-                    f"{self.entity_name()} takes {self.magnitude} damage from unnatural cold",color.status_effect_applied
-                )
+                if self.entity.name=="Player":
+                    self.entity.gamemap.engine.message_log.add_message(
+                        f"You take {self.magnitude} damage from unnatural cold",color.status_effect_applied
+                    )
+                else:
+                    self.entity.gamemap.engine.message_log.add_message(
+                        f"{self.entity_name()} takes {self.magnitude} damage from unnatural cold",color.status_effect_applied
+                    )
                 self.entity.fighter.take_damage(self.magnitude)
 
     def expire(self,resisted=False):
         super().expire(resisted)
         if resisted:
-            self.entity.gamemap.engine.message_log.add_message(
-                f"{self.entity_name()} resists the magical cold",color.status_effect_applied
-            )
+            if self.entity.name=="Player":
+                self.entity.gamemap.engine.message_log.add_message(
+                    f"You resist the magical cold",color.status_effect_applied
+                )
+            else:
+                self.entity.gamemap.engine.message_log.add_message(
+                    f"{self.entity_name()} resists the magical cold",color.status_effect_applied
+                )
         else:
-            self.entity.gamemap.engine.message_log.add_message(
-                f"{self.entity_name()} shakes off the unnatural cold",color.status_effect_applied
-            )
+            if self.entity.name=="Player":
+                self.entity.gamemap.engine.message_log.add_message(
+                    f"You shake off the unnatural cold",color.status_effect_applied
+                )
+            else:
+                self.entity.gamemap.engine.message_log.add_message(
+                    f"{self.entity_name()} shakes off the unnatural cold",color.status_effect_applied
+                )
 
 class AntivenomImmunityEffect(StatusEffect):
     def __init__(self,

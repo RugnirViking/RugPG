@@ -245,6 +245,7 @@ class MainGameEventHandler(EventHandler):
                 )
             elif key == tcod.event.K_COMMA:
                 self.engine.player.level.current_xp=self.engine.player.level.experience_to_next_level+1
+                return WaitAction(player)
             elif key == tcod.event.K_PERIOD:
                 self.engine.player.skill_points=99
 
