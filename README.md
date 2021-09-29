@@ -37,6 +37,7 @@ Controls:
 <details>
 <summary><b>Debug Commands (Cheating!)</b></summary>
 Debug commands must be turned on in options screen from the main menu to work.
+ 
  - 'o' makes the player confused for 10 turns. Used for testing ai-replacing spells on the player
  - 'l' instant reveals the map
  - 'k' teleports to selected tile
